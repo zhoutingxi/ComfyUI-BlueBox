@@ -1,3 +1,9 @@
+## 界面预览
+
+![编辑器主界面](assets/1.jpg)
+
+![打开方式](assets/2.jpg)
+
 # ComfyUI-BlueBox
 
 > ComfyUI 图像生成链路中的「可视化编辑 + 桥接」系统。
