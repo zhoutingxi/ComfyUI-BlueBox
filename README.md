@@ -61,8 +61,6 @@ git clone https://github.com/zhoutingxi/ComfyUI-BlueBox.git ComfyUI-BlueBox
 
 前端仅使用浏览器原生 API（WebGL / IndexedDB / Canvas / postMessage），无需任何 CDN 外链。
 
-`requirements.txt` 可以留空。
-
 ---
 
 ## 环境要求
