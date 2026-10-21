@@ -1,0 +1,16 @@
+[project]
+name = "comfyui-bluebox"
+description = "ComfyUI 图像生成链路中的可视化编辑与桥接系统，支持遮罩绘制、涂鸦、裁切、扩图与调色。"
+version = "1.0.0"
+license = { file = "LICENSE" }
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/zhoutingxi/ComfyUI-BlueBox"
+"Bug Tracker" = "https://github.com/zhoutingxi/ComfyUI-BlueBox/issues"
+
+[tool.comfy]
+PublisherId = "zhoutingxi"        
+DisplayName = "BlueBox蓝色多脑盒"
+Icon = ""
+includes = []

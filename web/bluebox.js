@@ -164,13 +164,28 @@ async function openBlueBoxEditor(node) {
 
   let url = null;
 
+  // ✅ 新增：BlueBoxAllPreview 直接用 properties.imgData（webp base64）
+  if (node.comfyClass === "BlueBoxAllPreview") {
+    const imgData = node.properties?.imgData;
+    if (imgData?.base64) {
+      const mime = imgData.type || "image/webp";
+      url = `data:${mime};base64,${imgData.base64}`;
+    }
+  }
+
+  // 原有逻辑（用 else if + !url 串起来，避免覆盖）
   const imgWidget = node.widgets?.find((w) => w.name === "image");
-  if (imgWidget && typeof imgWidget.value === "string" && imgWidget.value) {
+  if (
+    !url &&
+    imgWidget &&
+    typeof imgWidget.value === "string" &&
+    imgWidget.value
+  ) {
     url =
       "/view?filename=" +
       encodeURIComponent(imgWidget.value) +
       "&subfolder=&type=input";
-  } else if (node.imgs && node.imgs.length > 0) {
+  } else if (!url && node.imgs && node.imgs.length > 0) {
     url = extractUrlFromImgEntry(node.imgs[0]);
   }
 
@@ -204,17 +219,8 @@ async function openBlueBoxEditor(node) {
     snapshot = null;
   }
 
-  // ------------------------------------------------------------------
   // 快照有效性判断
-  //
-  // Bridge 分支：
-  //   有效条件：当前节点显示的是"烘焙图"（非 temp 占位），
-  //             且烘焙图名与快照记录的 bridgeSourceImage 一致。
-  //
-  // LoadImage 分支（原生 + BlueBox）：
-  //   有效条件：快照记录的 sourceImage 与当前 image widget 值一致。
-  // ------------------------------------------------------------------
-  if (snapshot) {
+    if (snapshot) {
     if (isBridge) {
       // ---- Bridge 分支 ----
       const meta = getBridgeCurrentImageMeta(node);
@@ -225,19 +231,16 @@ async function openBlueBoxEditor(node) {
         snapshot = null;
         BB_DB.delete(snapshotKey).catch(() => {});
       } else if (meta.subfolder === "BlueBoxBridge") {
-        // temp 占位 → 上游刚重新注入，之前的编辑已作废
         console.log("[BlueBox] Bridge 当前为占位图，快照作废");
         snapshot = null;
         BB_DB.delete(snapshotKey).catch(() => {});
       } else {
         const snapshotSource = snapshot.bridgeSourceImage || null;
         if (!snapshotSource) {
-          // 快照没记录来源 → 无法验证 → 作废
           console.log("[BlueBox] Bridge 快照无来源记录，作废");
           snapshot = null;
           BB_DB.delete(snapshotKey).catch(() => {});
         } else if (snapshotSource !== meta.filename) {
-          // 烘焙图已更换 → 作废
           console.log(
             "[BlueBox] Bridge 烘焙图已更换，快照作废:",
             snapshotSource,
@@ -250,13 +253,17 @@ async function openBlueBoxEditor(node) {
           console.log("[BlueBox] Bridge 快照有效，保留");
         }
       }
+    } else if (node.comfyClass === "BlueBoxAllPreview") {
+      // ✅ 修复：预览节点快照一律作废，每次都用当前图
+      console.log("[BlueBox] BlueBoxAllPreview 快照作废（每次都用当前图）");
+      snapshot = null;
+      BB_DB.delete(snapshotKey).catch(() => {});
     } else {
-      // ---- LoadImage 分支（原生 LoadImage / BlueBoxLoadImage）----
+      // ---- LoadImage 分支 ----
       const snapshotSource = snapshot.sourceImage || null;
       const currentImage = imgWidget?.value || null;
 
       if (!snapshotSource) {
-        // 老快照没有 sourceImage 字段 → 保守作废
         console.log("[BlueBox] LoadImage 快照无来源记录，作废");
         snapshot = null;
         BB_DB.delete(snapshotKey).catch(() => {});
@@ -346,6 +353,42 @@ async function handleMaskResult(payload) {
   const node = window._bbEditTargetNode;
   if (!node) return;
 
+  // ✅ 新增：BlueBoxAllPreview 回填分支
+  // 编辑器已把调色/涂鸦/缩放合成到 payload.image，
+  // 直接写回 properties.imgData 并刷新节点背景。
+  if (node.comfyClass === "BlueBoxAllPreview") {
+    const mainDataUrl = payload.image;
+    if (!mainDataUrl) {
+      alert("回填失败：没有可用的图像");
+      window._bbEditTargetNode = null;
+      window._bbEditNodeId = null;
+      return;
+    }
+
+    const match = mainDataUrl.match(/^data:(.+?);base64,(.+)$/);
+    if (match) {
+      node.properties.imgData = {
+        name: "bg_image",
+        base64: match[2],
+        type: match[1],
+      };
+      if (node.previewer?.refreshBackgroundImage) {
+        node.previewer.refreshBackgroundImage(node);
+      } else if (node.previewWidget?.element) {
+        node.previewWidget.element.style.backgroundImage = `url(${mainDataUrl})`;
+      }
+      node.setDirtyCanvas?.(true, true);
+      console.log("[BlueBox] BlueBoxAllPreview 预览已回填");
+    } else {
+      console.warn("[BlueBox] 回填 dataURL 解析失败");
+    }
+
+    window._bbEditTargetNode = null;
+    window._bbEditNodeId = null;
+    return;
+  }
+
+  // ---- 原有：Bridge / LoadImage 分支 ----
   const mainDataUrl = payload.image || payload.maskAlphaImage;
   if (!mainDataUrl) {
     alert("回填失败：没有可上传的图像");
@@ -432,8 +475,7 @@ async function handleMaskResult(payload) {
       console.warn("[BlueBox] Bridge 注册失败:", e);
     }
 
-    // 节点实际显示的图 = 预览图（若有）否则主图
-        const displayName = previewName || mainName;
+    const displayName = previewName || mainName;
     const displayUrl =
       "/view?filename=" +
       encodeURIComponent(displayName) +
@@ -454,15 +496,12 @@ async function handleMaskResult(payload) {
     node.imgs = [imgObj];
     node.setDirtyCanvas?.(true, true);
 
-    // 同步节点缓存的元信息：与节点实际显示的图一致。
     node.__bbCurrentImageMeta = {
       filename: displayName,
       subfolder: "",
       type: "input",
     };
 
-    // 补写快照的来源标识：与 node.__bbCurrentImageMeta.filename 保持一致。
-    // 这样下次 openBlueBoxEditor 就能判定"快照有效，保留"。
     const snapshotKey = "bb_snapshot_" + nodeId;
     BB_DB.get(snapshotKey)
       .then((snap) => {
@@ -516,13 +555,13 @@ async function handleMaskResult(payload) {
     }
   }
 
-  const imgWidget = node.widgets?.find((w) => w.name === "image");
+  const imgWidget2 = node.widgets?.find((w) => w.name === "image");
   const maskWidget = node.widgets?.find((w) => w.name === "mask_file");
 
   node.__bbSuppressMaskClear = true;
 
-  if (imgWidget) {
-    imgWidget.value = serverName;
+  if (imgWidget2) {
+    imgWidget2.value = serverName;
   }
 
   if (maskWidget) {
@@ -533,7 +572,7 @@ async function handleMaskResult(payload) {
     node.__bbSuppressMaskClear = false;
   }, 800);
 
-    const displayUrl =
+  const displayUrl =
     previewUrl2 ||
     "/view?filename=" +
       encodeURIComponent(serverName) +
@@ -555,14 +594,12 @@ async function handleMaskResult(payload) {
     node.setDirtyCanvas?.(true, true);
   }
 
-  // 补写快照的来源标识：当前 image widget 值（= serverName）。
-  // 用户换图后，widget 值变，下次打开编辑器即作废快照。
-  const snapshotKey = "bb_snapshot_" + String(node.id);
-  BB_DB.get(snapshotKey)
+  const snapshotKey2 = "bb_snapshot_" + String(node.id);
+  BB_DB.get(snapshotKey2)
     .then((snap) => {
       if (snap) {
         snap.sourceImage = serverName;
-        BB_DB.put(snapshotKey, snap).catch(() => {});
+        BB_DB.put(snapshotKey2, snap).catch(() => {});
       }
     })
     .catch(() => {});

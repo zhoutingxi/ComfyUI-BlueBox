@@ -6,16 +6,30 @@ from server import PromptServer
 from .bluebox_nodes import BlueBoxLoadImage, BlueBoxBridge
 from . import bluebox_core as core
 
+from .allpreview_nodes import (
+    NODE_CLASS_MAPPINGS as PREVIEW_NODE_CLASS_MAPPINGS,
+    NODE_DISPLAY_NAME_MAPPINGS as PREVIEW_NODE_DISPLAY_NAME_MAPPINGS,
+)
+
+from .nodes.rotate_image_bluebox import (
+    NODE_CLASS_MAPPINGS as ROTATE_NODE_CLASS_MAPPINGS,
+    NODE_DISPLAY_NAME_MAPPINGS as ROTATE_NODE_DISPLAY_NAME_MAPPINGS,
+)
+
 WEB_DIRECTORY = "./web"
 
 NODE_CLASS_MAPPINGS = {
     "BlueBoxLoadImage": BlueBoxLoadImage,
     "BlueBoxBridge": BlueBoxBridge,
+    **PREVIEW_NODE_CLASS_MAPPINGS,
+    **ROTATE_NODE_CLASS_MAPPINGS,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "BlueBoxLoadImage": "Load Image (BlueBox)",
     "BlueBoxBridge": "Bridge (BlueBox)",
+    **PREVIEW_NODE_DISPLAY_NAME_MAPPINGS,
+    **ROTATE_NODE_DISPLAY_NAME_MAPPINGS,
 }
 
 __all__ = ["WEB_DIRECTORY", "NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
