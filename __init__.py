@@ -11,6 +11,12 @@ from .allpreview_nodes import (
     NODE_DISPLAY_NAME_MAPPINGS as PREVIEW_NODE_DISPLAY_NAME_MAPPINGS,
 )
 
+# === 新增：Comparison 节点 ===
+from .comparison_nodes import (
+    NODE_CLASS_MAPPINGS as COMPARE_NODE_CLASS_MAPPINGS,
+    NODE_DISPLAY_NAME_MAPPINGS as COMPARE_NODE_DISPLAY_NAME_MAPPINGS,
+)
+
 from .nodes.rotate_image_bluebox import (
     NODE_CLASS_MAPPINGS as ROTATE_NODE_CLASS_MAPPINGS,
     NODE_DISPLAY_NAME_MAPPINGS as ROTATE_NODE_DISPLAY_NAME_MAPPINGS,
@@ -22,6 +28,7 @@ NODE_CLASS_MAPPINGS = {
     "BlueBoxLoadImage": BlueBoxLoadImage,
     "BlueBoxBridge": BlueBoxBridge,
     **PREVIEW_NODE_CLASS_MAPPINGS,
+    **COMPARE_NODE_CLASS_MAPPINGS,          # === 新增 ===
     **ROTATE_NODE_CLASS_MAPPINGS,
 }
 
@@ -29,6 +36,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "BlueBoxLoadImage": "Load Image (BlueBox)",
     "BlueBoxBridge": "Bridge (BlueBox)",
     **PREVIEW_NODE_DISPLAY_NAME_MAPPINGS,
+    **COMPARE_NODE_DISPLAY_NAME_MAPPINGS,   # === 新增 ===
     **ROTATE_NODE_DISPLAY_NAME_MAPPINGS,
 }
 
