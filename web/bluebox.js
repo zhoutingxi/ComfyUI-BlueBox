@@ -143,13 +143,6 @@ let _bbPollTimer = null;
 let _bbPollAttempts = 0;
 const BB_POLL_MAX = 1200;
 
-// ------------------------------------------------------------------
-// 取 Bridge 节点"当前显示图"的元信息。
-//
-// Bridge 没有 image widget，node.imgs 也只是 Image 对象，
-// 所以最可靠的来源是 onExecuted 里缓存的原始 ui.images[0]。
-// 拿不到时退化为 null，此时认为快照无效。
-// ------------------------------------------------------------------
 function getBridgeCurrentImageMeta(node) {
   if (!node) return null;
   const meta = node.__bbCurrentImageMeta;
@@ -164,7 +157,6 @@ async function openBlueBoxEditor(node) {
 
   let url = null;
 
-  // ✅ 新增：BlueBoxAllPreview 直接用 properties.imgData（webp base64）
   if (node.comfyClass === "BlueBoxAllPreview") {
     const imgData = node.properties?.imgData;
     if (imgData?.base64) {
@@ -173,8 +165,7 @@ async function openBlueBoxEditor(node) {
     }
   }
 
-  // 原有逻辑（用 else if + !url 串起来，避免覆盖）
-  const imgWidget = node.widgets?.find((w) => w.name === "image");
+    const imgWidget = node.widgets?.find((w) => w.name === "image");
   if (
     !url &&
     imgWidget &&
@@ -187,6 +178,31 @@ async function openBlueBoxEditor(node) {
       "&subfolder=&type=input";
   } else if (!url && node.imgs && node.imgs.length > 0) {
     url = extractUrlFromImgEntry(node.imgs[0]);
+  }
+
+  // 兜底：Bridge 在 block 状态下 imgs 可能为空，直接向后端要当前图
+  if (!url && node.comfyClass === "BlueBoxBridge") {
+    try {
+      const nodeId = node.__bbNodeId || String(node.id);
+      const resp = await fetch(
+        "/bluebox/bridge_current_image?node_id=" +
+          encodeURIComponent(nodeId),
+      );
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.ok && data.image && data.image.filename) {
+          url =
+            "/view?filename=" +
+            encodeURIComponent(data.image.filename) +
+            "&subfolder=" +
+            encodeURIComponent(data.image.subfolder || "") +
+            "&type=" +
+            encodeURIComponent(data.image.type || "temp");
+        }
+      }
+    } catch (e) {
+      console.warn("[BlueBox] Bridge 兜底取图失败:", e);
+    }
   }
 
   if (!url) {
@@ -219,10 +235,8 @@ async function openBlueBoxEditor(node) {
     snapshot = null;
   }
 
-  // 快照有效性判断
-    if (snapshot) {
+  if (snapshot) {
     if (isBridge) {
-      // ---- Bridge 分支 ----
       const meta = getBridgeCurrentImageMeta(node);
       console.log("[BlueBox] Bridge 当前图元信息:", meta);
 
@@ -254,12 +268,10 @@ async function openBlueBoxEditor(node) {
         }
       }
     } else if (node.comfyClass === "BlueBoxAllPreview") {
-      // ✅ 修复：预览节点快照一律作废，每次都用当前图
       console.log("[BlueBox] BlueBoxAllPreview 快照作废（每次都用当前图）");
       snapshot = null;
       BB_DB.delete(snapshotKey).catch(() => {});
     } else {
-      // ---- LoadImage 分支 ----
       const snapshotSource = snapshot.sourceImage || null;
       const currentImage = imgWidget?.value || null;
 
@@ -289,9 +301,56 @@ async function openBlueBoxEditor(node) {
   window._bbEditTargetNode = node;
   window._bbEditNodeId = nodeId;
 
-  const param = snapshot
+if (!node.__bbReferenceKey && node.comfyClass === "BlueBoxBridge") {
+    try {
+      const nodeId = node.__bbNodeId || String(node.id);
+      const resp = await fetch(
+        "/bluebox/bridge_reference_image?node_id=" + encodeURIComponent(nodeId),
+      );
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.ok && data.image?.filename) {
+          const refUrl =
+            "/view?filename=" +
+            encodeURIComponent(data.image.filename) +
+            "&subfolder=" +
+            encodeURIComponent(data.image.subfolder || "") +
+            "&type=" +
+            encodeURIComponent(data.image.type || "temp");
+          const r = await fetch(refUrl);
+          const blob = await r.blob();
+          const dataUrl = await new Promise((res) => {
+            const fr = new FileReader();
+            fr.onload = () => res(fr.result);
+            fr.readAsDataURL(blob);
+          });
+          const key = "bb_reference_" + nodeId;
+          await BB_DB.put(key, dataUrl);
+          node.__bbReferenceKey = key;
+        }
+      }
+    } catch (e) {
+      console.warn("[BlueBox] 兜底获取参考图失败:", e);
+    }
+  }
+
+  // 参考图：仅当节点上缓存了 reference key 且数据存在时传入
+  let referenceParam = "";
+  const refKey = node.__bbReferenceKey || null;
+  if (refKey) {
+    const refData = await BB_DB.get(refKey).catch(() => null);
+    if (refData) {
+      referenceParam = `&referenceId=${encodeURIComponent(refKey)}`;
+    } else {
+      node.__bbReferenceKey = null;
+    }
+  }
+
+  const baseParam = snapshot
     ? `snapshotId=${encodeURIComponent(snapshotKey)}&imageId=${encodeURIComponent(imageId)}&nodeId=${encodeURIComponent(nodeId)}`
     : `imageId=${encodeURIComponent(imageId)}&nodeId=${encodeURIComponent(nodeId)}`;
+
+  const param = baseParam + referenceParam;
 
   const win = window.open(
     `${EXT_BASE}/mask-editor.html?${param}`,
@@ -353,9 +412,6 @@ async function handleMaskResult(payload) {
   const node = window._bbEditTargetNode;
   if (!node) return;
 
-  // ✅ 新增：BlueBoxAllPreview 回填分支
-  // 编辑器已把调色/涂鸦/缩放合成到 payload.image，
-  // 直接写回 properties.imgData 并刷新节点背景。
   if (node.comfyClass === "BlueBoxAllPreview") {
     const mainDataUrl = payload.image;
     if (!mainDataUrl) {
@@ -388,7 +444,6 @@ async function handleMaskResult(payload) {
     return;
   }
 
-  // ---- 原有：Bridge / LoadImage 分支 ----
   const mainDataUrl = payload.image || payload.maskAlphaImage;
   if (!mainDataUrl) {
     alert("回填失败：没有可上传的图像");
@@ -521,7 +576,6 @@ async function handleMaskResult(payload) {
     return;
   }
 
-  // ---- LoadImage 分支 ----
   const serverName = await uploadDataUrlToComfy(
     mainDataUrl,
     `bb_${sharedHash}`,
@@ -699,7 +753,6 @@ app.registerExtension({
         return r;
       };
 
-      // 缓存每次执行的 ui.images 原始元信息，供 openBlueBoxEditor 判断快照有效性。
       const origOnExecuted = nodeType.prototype.onExecuted;
       nodeType.prototype.onExecuted = function (message) {
         const r = origOnExecuted?.apply(this, arguments);
@@ -723,6 +776,60 @@ app.registerExtension({
               );
             }
           }
+
+          // 新增：如果本次执行带了 reference，缓存参考图到 IndexedDB
+          if (message?.reference_present?.[0]) {
+            const node = this;
+            const refInput = node.inputs?.find((i) => i.name === "reference");
+            let refUrl = null;
+
+            if (refInput && refInput.link != null) {
+              const graph = app.graph;
+              const link = graph?.links?.[refInput.link];
+              if (link) {
+                const originNode = graph.getNodeById(link.origin_id);
+                if (originNode) {
+                  if (originNode.imgs && originNode.imgs.length > 0) {
+                    refUrl = extractUrlFromImgEntry(originNode.imgs[0]);
+                  }
+                  if (!refUrl && originNode.properties?.imgData?.base64) {
+                    const mime = originNode.properties.imgData.type || "image/webp";
+                    refUrl = `data:${mime};base64,${originNode.properties.imgData.base64}`;
+                  }
+                  if (!refUrl) {
+                    const w = originNode.widgets?.find((x) => x.name === "image");
+                    if (w && typeof w.value === "string" && w.value) {
+                      refUrl =
+                        "/view?filename=" +
+                        encodeURIComponent(w.value) +
+                        "&subfolder=&type=input";
+                    }
+                  }
+                }
+              }
+            }
+
+            if (refUrl) {
+              const key = "bb_reference_" + String(node.id);
+              fetch(refUrl)
+                .then((resp) => resp.blob())
+                .then((blob) => {
+                  const fr = new FileReader();
+                  fr.onload = () => {
+                    BB_DB.put(key, fr.result)
+                      .then(() => {
+                        node.__bbReferenceKey = key;
+                        console.log("[BlueBox] 参考图已缓存:", key);
+                      })
+                      .catch(() => {});
+                  };
+                  fr.readAsDataURL(blob);
+                })
+                .catch((e) => console.warn("[BlueBox] 参考图读取失败:", e));
+            } else {
+              console.log("[BlueBox] reference 已连线但未取到图像");
+            }
+          }
         } catch (e) {
           console.warn("[BlueBox] onExecuted 解析失败:", e);
         }
@@ -735,6 +842,9 @@ app.registerExtension({
       try {
         const key = "bb_snapshot_" + String(this.id);
         BB_DB.delete(key).catch(() => {});
+        if (this.__bbReferenceKey) {
+          BB_DB.delete(this.__bbReferenceKey).catch(() => {});
+        }
       } catch (e) {}
       return origOnRemoved?.apply(this, arguments);
     };

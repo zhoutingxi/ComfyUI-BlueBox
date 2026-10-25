@@ -1062,107 +1062,108 @@
         box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
       }
 
-.rotate-dialog-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
-  z-index: 99999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.rotate-dialog-box {
-  background: rgba(40, 40, 45, 0.85);
-  backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 18px;
-  padding: 28px 32px 24px;
-  width: 340px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  color: #fff;
-  font-family: inherit;
-}
-.rotate-dialog-box .rotate-title {
-  font-size: 17px;
-  font-weight: 600;
-  margin-bottom: 18px;
-  text-align: center;
-  letter-spacing: 0.5px;
-}
-.rotate-dialog-box .rotate-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-.rotate-dialog-box .rotate-row label {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
-  white-space: nowrap;
-}
-.rotate-dialog-box .rotate-angle-input {
-  flex: 1;
-  min-width: 0;
-  padding: 8px 12px;
-  font-size: 15px;
-  font-family: monospace;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  outline: none;
-  transition: all 0.2s ease;
-  -moz-appearance: textfield;
-  appearance: textfield;
-}
-.rotate-dialog-box .rotate-angle-input:focus {
-  border-color: rgba(255, 165, 0, 0.5);
-  background: rgba(255, 165, 0, 0.08);
-}
-.rotate-dialog-box .rotate-angle-input::-webkit-outer-spin-button,
-.rotate-dialog-box .rotate-angle-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.rotate-dialog-box .rotate-hint {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.35);
-  text-align: center;
-  margin-bottom: 18px;
-  line-height: 1.5;
-}
-.rotate-dialog-box .rotate-btn-group {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-}
-.rotate-dialog-box .rotate-btn-group button {
-  padding: 9px 26px;
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: 10px;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.2s ease;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-.rotate-dialog-box .rotate-btn-ok {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  color: #fff;
-  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
-}
-.rotate-dialog-box .rotate-btn-ok:hover {
-  transform: scale(1.04);
-}
-.rotate-dialog-box .rotate-btn-cancel {
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
-}
-.rotate-dialog-box .rotate-btn-cancel:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
-
+      .rotate-dialog-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .rotate-dialog-box {
+        background: rgba(40, 40, 45, 0.85);
+        backdrop-filter: blur(24px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 18px;
+        padding: 28px 32px 24px;
+        width: 340px;
+        box-shadow:
+          0 20px 60px rgba(0, 0, 0, 0.6),
+          inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        color: #fff;
+        font-family: inherit;
+      }
+      .rotate-dialog-box .rotate-title {
+        font-size: 17px;
+        font-weight: 600;
+        margin-bottom: 18px;
+        text-align: center;
+        letter-spacing: 0.5px;
+      }
+      .rotate-dialog-box .rotate-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      .rotate-dialog-box .rotate-row label {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.6);
+        white-space: nowrap;
+      }
+      .rotate-dialog-box .rotate-angle-input {
+        flex: 1;
+        min-width: 0;
+        padding: 8px 12px;
+        font-size: 15px;
+        font-family: monospace;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        outline: none;
+        transition: all 0.2s ease;
+        -moz-appearance: textfield;
+        appearance: textfield;
+      }
+      .rotate-dialog-box .rotate-angle-input:focus {
+        border-color: rgba(255, 165, 0, 0.5);
+        background: rgba(255, 165, 0, 0.08);
+      }
+      .rotate-dialog-box .rotate-angle-input::-webkit-outer-spin-button,
+      .rotate-dialog-box .rotate-angle-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      .rotate-dialog-box .rotate-hint {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.35);
+        text-align: center;
+        margin-bottom: 18px;
+        line-height: 1.5;
+      }
+      .rotate-dialog-box .rotate-btn-group {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+      }
+      .rotate-dialog-box .rotate-btn-group button {
+        padding: 9px 26px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 10px;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 0.2s ease;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .rotate-dialog-box .rotate-btn-ok {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: #fff;
+        box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+      }
+      .rotate-dialog-box .rotate-btn-ok:hover {
+        transform: scale(1.04);
+      }
+      .rotate-dialog-box .rotate-btn-cancel {
+        background: rgba(255, 255, 255, 0.06);
+        color: #fff;
+      }
+      .rotate-dialog-box .rotate-btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.15);
+      }
     </style>
   </head>
   <body>
@@ -1739,25 +1740,25 @@
             裁切图像
           </button>
           <button class="mask-side-btn" onclick="openRotateDialog()">
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    class="lucide lucide-refresh-ccw preview-icon"
-  >
-    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-    <path d="M3 3v5h5" />
-    <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
-    <path d="M16 16h5v5" />
-  </svg>
-  旋转图像
-</button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-refresh-ccw preview-icon"
+            >
+              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+              <path d="M16 16h5v5" />
+            </svg>
+            旋转图像
+          </button>
           <button
             class="mask-side-btn"
             id="compareBtn"
@@ -1780,6 +1781,33 @@
             </svg>
             对比图像
           </button>
+
+          <button
+            class="mask-side-btn"
+            id="compareReferenceBtn"
+            onclick="toggleCompareReference()"
+            style="display: none"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-images preview-icon"
+            >
+              <path d="M18 22H4a2 2 0 0 1-2-2V6" />
+              <path d="m22 13-1.296-1.296a2.41 2.41 0 0 0-3.408 0L11 18" />
+              <circle cx="12" cy="8" r="2" />
+              <rect width="16" height="16" x="6" y="2" rx="2" />
+            </svg>
+            对比参考图
+          </button>
+
           <!-- 缩放控件 -->
           <div class="resize-control-group">
             <div class="resize-control-row">
@@ -2265,14 +2293,15 @@
         let isCropModeActive = false;
 
         let isCompareMode = false;
-let compareLayout = null;
-let compareOriginalCanvas = null;
-let compareOriginalContainer = null;
-let originalPreviewData = null;
-// 对比模式：统一基准与右图补偿
-let compareBaseW = 0;
-let compareBaseH = 0;
-let compareRightCompensate = 1;
+        let compareLayout = null;
+        let compareOriginalCanvas = null;
+        let compareOriginalContainer = null;
+        let originalPreviewData = null;
+        let compareBaseW = 0;
+        let compareBaseH = 0;
+        let compareRightCompensate = 1;
+        let referenceImageData = null;
+        let compareLeftSource = "original";
 
         let expandSelection = null;
         let isExpandSelecting = false;
@@ -2948,7 +2977,7 @@ color = applyColorAdjust(color);
           return true;
         }
 
-let CANVAS_SAFE_MAX = 0;
+        let CANVAS_SAFE_MAX = 0;
 
         function probeCanvasMax() {
           if (CANVAS_SAFE_MAX > 0) return CANVAS_SAFE_MAX;
@@ -2957,7 +2986,10 @@ let CANVAS_SAFE_MAX = 0;
           for (const size of testSizes) {
             glCanvas.width = size;
             glCanvas.height = size;
-            if (gl.drawingBufferWidth >= size && gl.drawingBufferHeight >= size) {
+            if (
+              gl.drawingBufferWidth >= size &&
+              gl.drawingBufferHeight >= size
+            ) {
               CANVAS_SAFE_MAX = size;
               break;
             }
@@ -2966,7 +2998,6 @@ let CANVAS_SAFE_MAX = 0;
 
           glCanvas.width = 1;
           glCanvas.height = 1;
-          console.log("🔍 canvas 绘制缓冲区安全上限:", CANVAS_SAFE_MAX);
           return CANVAS_SAFE_MAX;
         }
 
@@ -3265,14 +3296,13 @@ let CANVAS_SAFE_MAX = 0;
           };
         }
 
-                function renderGL(doStats) {
+        function renderGL(doStats) {
           if (!program || !isInitialized) return;
           if (!editImageData) return;
 
           const w = editWidth;
           const h = editHeight;
 
-          // 主动限制到安全上限，等比缩放
           const safeMax = probeCanvasMax();
           const renderScale = Math.min(1, safeMax / Math.max(w, h));
           const renderW = Math.max(1, Math.round(w * renderScale));
@@ -3283,8 +3313,8 @@ let CANVAS_SAFE_MAX = 0;
 
           const vpW = gl.drawingBufferWidth;
           const vpH = gl.drawingBufferHeight;
-          const finalW = (vpW === renderW) ? renderW : Math.min(vpW, renderW);
-          const finalH = (vpH === renderH) ? renderH : Math.min(vpH, renderH);
+          const finalW = vpW === renderW ? renderW : Math.min(vpW, renderW);
+          const finalH = vpH === renderH ? renderH : Math.min(vpH, renderH);
 
           glCanvas.style.width = finalW + "px";
           glCanvas.style.height = finalH + "px";
@@ -3299,7 +3329,7 @@ let CANVAS_SAFE_MAX = 0;
 
           gl.useProgram(program);
           gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-          
+
           gl.enableVertexAttribArray(programUniforms.a_position);
           gl.vertexAttribPointer(
             programUniforms.a_position,
@@ -3549,50 +3579,49 @@ let CANVAS_SAFE_MAX = 0;
         }
 
         function fitToScreen() {
-  if (!editWidth || !editHeight) return;
+          if (!editWidth || !editHeight) return;
 
-  // 用 canvas 实际渲染尺寸做基准，而不是原图尺寸
-  const baseW = window.__canvasRenderW || editWidth;
-  const baseH = window.__canvasRenderH || editHeight;
+          const baseW = window.__canvasRenderW || editWidth;
+          const baseH = window.__canvasRenderH || editHeight;
 
-    if (isCompareMode && compareLayout) {
-    const rect = wrapper.getBoundingClientRect();
-    const halfW = rect.width / 2 - 30;
-    const halfH = rect.height - 60;
-
-    // 统一以原图尺寸为基准，使左右两图"每原图像素→屏幕像素"一致
-    const baseW = compareBaseW || (originalPreviewData ? originalPreviewData.width : editWidth);
-    const baseH = compareBaseH || (originalPreviewData ? originalPreviewData.height : editHeight);
-
-    const scaleX = halfW / Math.max(baseW, 1);
-    const scaleY = halfH / Math.max(baseH, 1);
-    zoom = Math.min(scaleX, scaleY);
-    zoom = Math.max(0.05, Math.min(5, zoom));
-    panX = 0;
-    panY = 0;
-    applyZoom();
-    renderGL();
-    return;
-  }
-
-  recalculateDisplaySize();
-  if (cachedDisplayWidth < 100 || cachedDisplayHeight < 100) {
-    cachedDisplayWidth = Math.max(baseW, 600);
-    cachedDisplayHeight = Math.max(baseH, 400);
-  }
-  const scaleX = cachedDisplayWidth / baseW;
-  const scaleY = cachedDisplayHeight / baseH;
-  zoom = Math.min(scaleX, scaleY);
-  zoom = Math.max(0.05, Math.min(5, zoom));
-  panX = 0;
-  panY = 0;
-  applyZoom();
-  renderGL();
-}
-
-                function applyZoom() {
           if (isCompareMode && compareLayout) {
-            // 对比模式：两边 transform 统一由 syncCompareTransform 设置
+            const rect = wrapper.getBoundingClientRect();
+            const halfW = rect.width / 2 - 30;
+            const halfH = rect.height - 60;
+
+            const leftSrc = getCompareLeftImageData();
+            const baseW = compareBaseW || (leftSrc ? leftSrc.width : editWidth);
+            const baseH =
+              compareBaseH || (leftSrc ? leftSrc.height : editHeight);
+
+            const scaleX = halfW / Math.max(baseW, 1);
+            const scaleY = halfH / Math.max(baseH, 1);
+            zoom = Math.min(scaleX, scaleY);
+            zoom = Math.max(0.05, Math.min(5, zoom));
+            panX = 0;
+            panY = 0;
+            applyZoom();
+            renderGL();
+            return;
+          }
+
+          recalculateDisplaySize();
+          if (cachedDisplayWidth < 100 || cachedDisplayHeight < 100) {
+            cachedDisplayWidth = Math.max(baseW, 600);
+            cachedDisplayHeight = Math.max(baseH, 400);
+          }
+          const scaleX = cachedDisplayWidth / baseW;
+          const scaleY = cachedDisplayHeight / baseH;
+          zoom = Math.min(scaleX, scaleY);
+          zoom = Math.max(0.05, Math.min(5, zoom));
+          panX = 0;
+          panY = 0;
+          applyZoom();
+          renderGL();
+        }
+
+        function applyZoom() {
+          if (isCompareMode && compareLayout) {
             syncCompareTransform();
           } else {
             canvasContainer.style.transform =
@@ -3857,7 +3886,7 @@ let CANVAS_SAFE_MAX = 0;
             }
             cursorCtx.setLineDash([]);
             cursorCtx.lineDashOffset = 0;
-                       if (selection.isSquare) {
+            if (selection.isSquare) {
               cursorCtx.font = "bold 12px monospace";
               cursorCtx.textAlign = "center";
               const label = selection.w + "×" + selection.h;
@@ -4450,7 +4479,6 @@ let CANVAS_SAFE_MAX = 0;
           const dx = curX - startX;
           const dy = curY - startY;
 
-          // 未按 Shift：保持原矩形逻辑，返回普通矩形
           if (!shiftKey) {
             return {
               x: Math.min(startX, curX),
@@ -4460,27 +4488,21 @@ let CANVAS_SAFE_MAX = 0;
             };
           }
 
-          // Shift：正方形约束
           const signX = dx >= 0 ? 1 : -1;
           const signY = dy >= 0 ? 1 : -1;
 
-          // Photoshop 手感：取较大位移方向作为边长
           let side = Math.max(Math.abs(dx), Math.abs(dy));
-          // 向下对齐到 32 的整倍数，最小 32
           side = Math.floor(side / SQUARE_GRID) * SQUARE_GRID;
           if (side < SQUARE_GRID) side = SQUARE_GRID;
 
-          // 起点为锚点，向拖拽方向扩展
           let x0 = signX > 0 ? startX : startX - side;
           let y0 = signY > 0 ? startY : startY - side;
 
-          // 边界修正：平移进图像，必要时缩小
           if (x0 < 0) x0 = 0;
           if (y0 < 0) y0 = 0;
           if (x0 + side > editWidth) x0 = Math.max(0, editWidth - side);
           if (y0 + side > editHeight) y0 = Math.max(0, editHeight - side);
 
-          // 若平移后仍越界（图像某边不足 side），缩小边长
           if (x0 + side > editWidth || y0 + side > editHeight) {
             side =
               Math.floor(
@@ -4691,18 +4713,17 @@ let CANVAS_SAFE_MAX = 0;
 
         /* ========== 任意角度旋转（支持负数整数） ========== */
 
-window.openRotateDialog = function () {
-  if (!editImageData) {
-    showToast("⚠️ 没有可旋转的图片");
-    return;
-  }
+        window.openRotateDialog = function () {
+          if (!editImageData) {
+            showToast("⚠️ 没有可旋转的图片");
+            return;
+          }
 
-  // 防止重复弹框
-  if (document.querySelector(".rotate-dialog-overlay")) return;
+          if (document.querySelector(".rotate-dialog-overlay")) return;
 
-  const overlay = document.createElement("div");
-  overlay.className = "rotate-dialog-overlay";
-  overlay.innerHTML = `
+          const overlay = document.createElement("div");
+          overlay.className = "rotate-dialog-overlay";
+          overlay.innerHTML = `
     <div class="rotate-dialog-box">
       <div class="rotate-title">🔄 旋转图像</div>
       <div class="rotate-row">
@@ -4727,237 +4748,285 @@ window.openRotateDialog = function () {
       </div>
     </div>
   `;
-  document.body.appendChild(overlay);
+          document.body.appendChild(overlay);
 
-  const input = overlay.querySelector("#rotateAngleInput");
-  input.focus();
-  input.select();
+          const input = overlay.querySelector("#rotateAngleInput");
+          input.focus();
+          input.select();
 
-  function close() {
-    overlay.remove();
-  }
+          function close() {
+            overlay.remove();
+          }
 
-  function confirmRotate() {
-    let v = parseInt(input.value, 10);
-    if (isNaN(v)) {
-      showToast("❌ 请输入整数角度");
-      input.focus();
-      return;
-    }
-    // 规范到 -360 ~ 360，保留负号
-    v = ((v % 360) + 360) % 360;
-    if (v > 180) v -= 360; // 映射到 -180 ~ 180
-    if (v === 0) {
-      close();
-      showToast("💡 角度为 0，无需旋转");
-      return;
-    }
-    close();
-    rotateImageByAngle(v);
-  }
+          function confirmRotate() {
+            let v = parseInt(input.value, 10);
+            if (isNaN(v)) {
+              showToast("❌ 请输入整数角度");
+              input.focus();
+              return;
+            }
+            v = ((v % 360) + 360) % 360;
+            if (v > 180) v -= 360; // 映射到 -180 ~ 180
+            if (v === 0) {
+              close();
+              showToast("💡 角度为 0，无需旋转");
+              return;
+            }
+            close();
+            rotateImageByAngle(v);
+          }
 
-  overlay.querySelector("#rotateOkBtn").addEventListener("click", confirmRotate);
-  overlay.querySelector("#rotateCancelBtn").addEventListener("click", close);
-  overlay.addEventListener("click", function (e) {
-    if (e.target === overlay) close();
-  });
-  input.addEventListener("keydown", function (e) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      confirmRotate();
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      close();
-    }
-  });
-};
+          overlay
+            .querySelector("#rotateOkBtn")
+            .addEventListener("click", confirmRotate);
+          overlay
+            .querySelector("#rotateCancelBtn")
+            .addEventListener("click", close);
+          overlay.addEventListener("click", function (e) {
+            if (e.target === overlay) close();
+          });
+          input.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              confirmRotate();
+            } else if (e.key === "Escape") {
+              e.preventDefault();
+              close();
+            }
+          });
+        };
 
-/**
- * 按任意角度（度）旋转图像数据，正数顺时针，负数逆时针。
- * 使用双线性插值，画布自动扩展。
- * 返回 { imageData, width, height, offsetX, offsetY }
- */
-function rotateImageByAngleData(source, angleDeg, isMaskLike, isDoodleLike) {
-  const srcW = source.width;
-  const srcH = source.height;
-  const src = source.data;
+        /**
+         * 按任意角度（度）旋转图像数据，正数顺时针，负数逆时针。
+         * 使用双线性插值，画布自动扩展。
+         * 返回 { imageData, width, height, offsetX, offsetY }
+         */
+        function rotateImageByAngleData(
+          source,
+          angleDeg,
+          isMaskLike,
+          isDoodleLike,
+        ) {
+          const srcW = source.width;
+          const srcH = source.height;
+          const src = source.data;
 
-  const rad = (angleDeg * Math.PI) / 180;
-  const cos = Math.cos(rad);
-  const sin = -Math.sin(rad);
+          const rad = (angleDeg * Math.PI) / 180;
+          const cos = Math.cos(rad);
+          const sin = -Math.sin(rad);
 
-  const srcCx = srcW / 2;
-  const srcCy = srcH / 2;
+          const srcCx = srcW / 2;
+          const srcCy = srcH / 2;
 
-  // 包围盒：y 向下坐标系，正角度 = 顺时针
-  const corners = [
-    [-srcCx, -srcCy],
-    [srcW - srcCx, -srcCy],
-    [-srcCx, srcH - srcCy],
-    [srcW - srcCx, srcH - srcCy],
-  ];
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  for (const [x, y] of corners) {
-    const rx = x * cos + y * sin;
-    const ry = -x * sin + y * cos;
-    if (rx < minX) minX = rx;
-    if (rx > maxX) maxX = rx;
-    if (ry < minY) minY = ry;
-    if (ry > maxY) maxY = ry;
-  }
-  minX = Math.floor(minX);
-  minY = Math.floor(minY);
-  maxX = Math.ceil(maxX);
-  maxY = Math.ceil(maxY);
+          const corners = [
+            [-srcCx, -srcCy],
+            [srcW - srcCx, -srcCy],
+            [-srcCx, srcH - srcCy],
+            [srcW - srcCx, srcH - srcCy],
+          ];
+          let minX = Infinity,
+            minY = Infinity,
+            maxX = -Infinity,
+            maxY = -Infinity;
+          for (const [x, y] of corners) {
+            const rx = x * cos + y * sin;
+            const ry = -x * sin + y * cos;
+            if (rx < minX) minX = rx;
+            if (rx > maxX) maxX = rx;
+            if (ry < minY) minY = ry;
+            if (ry > maxY) maxY = ry;
+          }
+          minX = Math.floor(minX);
+          minY = Math.floor(minY);
+          maxX = Math.ceil(maxX);
+          maxY = Math.ceil(maxY);
 
-  const newW = Math.max(1, maxX - minX);
-  const newH = Math.max(1, maxY - minY);
+          const newW = Math.max(1, maxX - minX);
+          const newH = Math.max(1, maxY - minY);
 
-  const out = new ImageData(newW, newH);
-  const dst = out.data;
+          const out = new ImageData(newW, newH);
+          const dst = out.data;
 
-  for (let dy = 0; dy < newH; dy++) {
-    for (let dx = 0; dx < newW; dx++) {
-      const rx = minX + dx + 0.5;
-      const ry = minY + dy + 0.5;
+          for (let dy = 0; dy < newH; dy++) {
+            for (let dx = 0; dx < newW; dx++) {
+              const rx = minX + dx + 0.5;
+              const ry = minY + dy + 0.5;
 
-      // 逆变换：y 向下坐标系，正角度 = 顺时针
-      const sxRel = rx * cos - ry * sin;
-      const syRel = rx * sin + ry * cos;
+              const sxRel = rx * cos - ry * sin;
+              const syRel = rx * sin + ry * cos;
 
-      const sx = sxRel + srcCx;
-      const sy = syRel + srcCy;
+              const sx = sxRel + srcCx;
+              const sy = syRel + srcCy;
 
-      const di = (dy * newW + dx) * 4;
+              const di = (dy * newW + dx) * 4;
 
-      if (sx < 0 || sx >= srcW || sy < 0 || sy >= srcH) {
-        if (isDoodleLike) {
-          dst[di] = 0; dst[di + 1] = 0; dst[di + 2] = 0; dst[di + 3] = 0;
-        } else {
-          dst[di] = 0; dst[di + 1] = 0; dst[di + 2] = 0; dst[di + 3] = 255;
+              if (sx < 0 || sx >= srcW || sy < 0 || sy >= srcH) {
+                if (isDoodleLike) {
+                  dst[di] = 0;
+                  dst[di + 1] = 0;
+                  dst[di + 2] = 0;
+                  dst[di + 3] = 0;
+                } else {
+                  dst[di] = 0;
+                  dst[di + 1] = 0;
+                  dst[di + 2] = 0;
+                  dst[di + 3] = 255;
+                }
+                continue;
+              }
+
+              const x0 = Math.floor(sx - 0.5);
+              const y0 = Math.floor(sy - 0.5);
+              const fx = sx - 0.5 - x0;
+              const fy = sy - 0.5 - y0;
+
+              const x0c = Math.min(srcW - 1, Math.max(0, x0));
+              const y0c = Math.min(srcH - 1, Math.max(0, y0));
+              const x1c = Math.min(srcW - 1, Math.max(0, x0 + 1));
+              const y1c = Math.min(srcH - 1, Math.max(0, y0 + 1));
+
+              const i00 = (y0c * srcW + x0c) * 4;
+              const i10 = (y0c * srcW + x1c) * 4;
+              const i01 = (y1c * srcW + x0c) * 4;
+              const i11 = (y1c * srcW + x1c) * 4;
+
+              for (let c = 0; c < 4; c++) {
+                const v00 = src[i00 + c];
+                const v10 = src[i10 + c];
+                const v01 = src[i01 + c];
+                const v11 = src[i11 + c];
+                const top = v00 * (1 - fx) + v10 * fx;
+                const bottom = v01 * (1 - fx) + v11 * fx;
+                dst[di + c] = Math.round(top * (1 - fy) + bottom * fy);
+              }
+            }
+          }
+
+          if (isMaskLike) {
+            for (let i = 0; i < dst.length; i += 4) {
+              const v = dst[i] > 128 ? 255 : 0;
+              dst[i] = v;
+              dst[i + 1] = v;
+              dst[i + 2] = v;
+              dst[i + 3] = 255;
+            }
+          } else if (isDoodleLike) {
+            for (let i = 0; i < dst.length; i += 4) {
+              if (dst[i + 3] < 16) {
+                dst[i] = 0;
+                dst[i + 1] = 0;
+                dst[i + 2] = 0;
+                dst[i + 3] = 0;
+              } else {
+                dst[i + 3] = 255;
+              }
+            }
+          }
+
+          return { imageData: out, width: newW, height: newH };
         }
-        continue;
-      }
 
-      const x0 = Math.floor(sx - 0.5);
-      const y0 = Math.floor(sy - 0.5);
-      const fx = sx - 0.5 - x0;
-      const fy = sy - 0.5 - y0;
+        window.rotateImageByAngle = function (angleDeg) {
+          if (!editImageData) {
+            showToast("⚠️ 没有可旋转的图片");
+            return;
+          }
 
-      const x0c = Math.min(srcW - 1, Math.max(0, x0));
-      const y0c = Math.min(srcH - 1, Math.max(0, y0));
-      const x1c = Math.min(srcW - 1, Math.max(0, x0 + 1));
-      const y1c = Math.min(srcH - 1, Math.max(0, y0 + 1));
+          if (
+            editImageData.width !== editWidth ||
+            editImageData.height !== editHeight
+          ) {
+            console.warn("尺寸不一致，自动修正 editWidth/editHeight");
+            editWidth = editImageData.width;
+            editHeight = editImageData.height;
+          }
 
-      const i00 = (y0c * srcW + x0c) * 4;
-      const i10 = (y0c * srcW + x1c) * 4;
-      const i01 = (y1c * srcW + x0c) * 4;
-      const i11 = (y1c * srcW + x1c) * 4;
+          showProcessing(`🔄 旋转 ${angleDeg}° 中...`);
 
-      for (let c = 0; c < 4; c++) {
-        const v00 = src[i00 + c];
-        const v10 = src[i10 + c];
-        const v01 = src[i01 + c];
-        const v11 = src[i11 + c];
-        const top = v00 * (1 - fx) + v10 * fx;
-        const bottom = v01 * (1 - fx) + v11 * fx;
-        dst[di + c] = Math.round(top * (1 - fy) + bottom * fy);
-      }
-    }
-  }
+          setTimeout(() => {
+            try {
+              const rotatedEdit = rotateImageByAngleData(
+                editImageData,
+                angleDeg,
+                false,
+                false,
+              );
+              const newW = rotatedEdit.width;
+              const newH = rotatedEdit.height;
 
-  if (isMaskLike) {
-    for (let i = 0; i < dst.length; i += 4) {
-      const v = dst[i] > 128 ? 255 : 0;
-      dst[i] = v; dst[i + 1] = v; dst[i + 2] = v; dst[i + 3] = 255;
-    }
-  } else if (isDoodleLike) {
-    for (let i = 0; i < dst.length; i += 4) {
-      if (dst[i + 3] < 16) {
-        dst[i] = 0; dst[i + 1] = 0; dst[i + 2] = 0; dst[i + 3] = 0;
-      } else {
-        dst[i + 3] = 255;
-      }
-    }
-  }
+              if (Math.max(newW, newH) > MAX_EXPORT_LONG_EDGE) {
+                hideProcessing();
+                showToast(
+                  `❌ 旋转后尺寸 ${newW}×${newH} 超过长边 ${MAX_EXPORT_LONG_EDGE} 限制`,
+                );
+                return;
+              }
 
-  return { imageData: out, width: newW, height: newH };
-}
+              const rotatedMask = rotateImageByAngleData(
+                maskData,
+                angleDeg,
+                true,
+                false,
+              ).imageData;
+              const rotatedDoodle = rotateImageByAngleData(
+                doodleLayerData,
+                angleDeg,
+                false,
+                true,
+              ).imageData;
 
-window.rotateImageByAngle = function (angleDeg) {
-  if (!editImageData) {
-    showToast("⚠️ 没有可旋转的图片");
-    return;
-  }
+              editImageData = rotatedEdit.imageData;
+              maskData = rotatedMask;
+              doodleLayerData = rotatedDoodle;
+              editWidth = newW;
+              editHeight = newH;
 
-  // 校验一致性
-  if (editImageData.width !== editWidth || editImageData.height !== editHeight) {
-    console.warn("尺寸不一致，自动修正 editWidth/editHeight");
-    editWidth = editImageData.width;
-    editHeight = editImageData.height;
-  }
+              originalImageData = new ImageData(
+                new Uint8ClampedArray(editImageData.data),
+                newW,
+                newH,
+              );
+              originalPreviewData = new ImageData(
+                new Uint8ClampedArray(editImageData.data),
+                newW,
+                newH,
+              );
 
-  showProcessing(`🔄 旋转 ${angleDeg}° 中...`);
+              if (isCropModeActive) {
+                isCropModeActive = false;
+                cropBtn.classList.remove("active-crop");
+                cropSelection = null;
+              }
 
-  setTimeout(() => {
-    try {
-      const rotatedEdit = rotateImageByAngleData(editImageData, angleDeg, false, false);
-      const newW = rotatedEdit.width;
-      const newH = rotatedEdit.height;
+              resizeEnabled = false;
+              resizeEditedAfter = false;
+              resizeRatioValue = 1.0;
+              resizeRatioInput.value = "1.00";
+              updateResizeUI();
 
-      if (Math.max(newW, newH) > MAX_EXPORT_LONG_EDGE) {
-        hideProcessing();
-        showToast(`❌ 旋转后尺寸 ${newW}×${newH} 超过长边 ${MAX_EXPORT_LONG_EDGE} 限制`);
-        return;
-      }
+              glCanvas.width = newW;
+              glCanvas.height = newH;
+              glCanvas.style.width = newW + "px";
+              glCanvas.style.height = newH + "px";
 
-      const rotatedMask = rotateImageByAngleData(maskData, angleDeg, true, false).imageData;
-      const rotatedDoodle = rotateImageByAngleData(doodleLayerData, angleDeg, false, true).imageData;
+              pushUndo();
+              rebuildTextures();
+              updateUI();
+              fitToScreen();
+              drawSelectionOverlay();
+              renderGL();
 
-      editImageData = rotatedEdit.imageData;
-      maskData = rotatedMask;
-      doodleLayerData = rotatedDoodle;
-      editWidth = newW;
-      editHeight = newH;
+              markEditedAfterResize();
 
-      originalImageData = new ImageData(new Uint8ClampedArray(editImageData.data), newW, newH);
-      originalPreviewData = new ImageData(new Uint8ClampedArray(editImageData.data), newW, newH);
-
-      if (isCropModeActive) {
-        isCropModeActive = false;
-        cropBtn.classList.remove("active-crop");
-        cropSelection = null;
-      }
-
-      resizeEnabled = false;
-      resizeEditedAfter = false;
-      resizeRatioValue = 1.0;
-      resizeRatioInput.value = "1.00";
-      updateResizeUI();
-
-      glCanvas.width = newW;
-      glCanvas.height = newH;
-      glCanvas.style.width = newW + "px";
-      glCanvas.style.height = newH + "px";
-
-      pushUndo();
-      rebuildTextures();
-      updateUI();
-      fitToScreen();
-      drawSelectionOverlay();
-      renderGL();
-
-      markEditedAfterResize();
-
-      hideProcessing();
-      showToast(`✅ 已旋转 ${angleDeg}°: ${editWidth}×${editHeight}`);
-    } catch (err) {
-      console.error("旋转错误:", err);
-      hideProcessing();
-      showToast("⚠️ 旋转失败: " + err.message);
-    }
-  }, 50);
-};
+              hideProcessing();
+              showToast(`✅ 已旋转 ${angleDeg}°: ${editWidth}×${editHeight}`);
+            } catch (err) {
+              console.error("旋转错误:", err);
+              hideProcessing();
+              showToast("⚠️ 旋转失败: " + err.message);
+            }
+          }, 50);
+        };
 
         function buildCompareLayout() {
           if (compareLayout) return;
@@ -4995,33 +5064,60 @@ window.rotateImageByAngle = function (angleDeg) {
           wrapper.appendChild(compareLayout);
         }
 
+        function getCompareLeftImageData() {
+          if (compareLeftSource === "reference" && referenceImageData) {
+            return referenceImageData;
+          }
+          return originalPreviewData;
+        }
+
+        function updateReferenceButton() {
+          const btn = document.getElementById("compareReferenceBtn");
+          if (!btn) return;
+          btn.style.display = referenceImageData ? "flex" : "none";
+          if (!referenceImageData) {
+            btn.classList.remove("active-crop");
+          }
+        }
+
         function drawOriginalToCompareCanvas() {
-          const src = originalPreviewData;
+          const src = getCompareLeftImageData();
           if (!src) return;
           compareOriginalCanvas.width = src.width;
           compareOriginalCanvas.height = src.height;
           compareOriginalCanvas.getContext("2d").putImageData(src, 0, 0);
           compareOriginalCanvas.style.width = src.width + "px";
           compareOriginalCanvas.style.height = src.height + "px";
+
+          const leftLabel = compareLayout?.querySelector(
+            ".left-half .half-label",
+          );
+          if (leftLabel) {
+            leftLabel.textContent =
+              compareLeftSource === "reference" ? "参考图" : "原图";
+          }
         }
 
-                function syncCompareTransform() {
+        function syncCompareTransform() {
           if (!isCompareMode || !compareOriginalContainer) return;
 
-          // 左：原图容器，基准 = 原图尺寸
           compareOriginalContainer.style.transform =
             "translate(" + panX + "px, " + panY + "px) scale(" + zoom + ")";
 
-          // 右：编辑画布容器，补偿 renderScale
-          // 补偿后：glCanvasCSS尺寸 × zoom × compensate = 原图尺寸 × zoom
           const compensate = compareRightCompensate || 1;
           const rightScale = zoom * compensate;
 
           canvasContainer.style.transform =
-            "translate(" + panX + "px, " + panY + "px) scale(" + rightScale + ")";
+            "translate(" +
+            panX +
+            "px, " +
+            panY +
+            "px) scale(" +
+            rightScale +
+            ")";
         }
 
-                window.toggleCompare = function () {
+        window.toggleCompare = function () {
           if (!originalPreviewData || !editImageData) {
             showToast("⚠️ 没有可对比的图片");
             return;
@@ -5033,16 +5129,13 @@ window.rotateImageByAngle = function (angleDeg) {
           if (isCompareMode) {
             buildCompareLayout();
 
-            // 基准 = 原图尺寸
-            compareBaseW = originalPreviewData.width;
-            compareBaseH = originalPreviewData.height;
+            const leftSrc = getCompareLeftImageData();
+            compareBaseW = leftSrc.width;
+            compareBaseH = leftSrc.height;
 
-            // 右图（编辑画布）屏幕 CSS 尺寸
             const renderW = window.__canvasRenderW || editWidth;
             const renderH = window.__canvasRenderH || editHeight;
 
-            // 等比补偿：让"编辑画布 CSS 尺寸 × 补偿" ≈ 原图尺寸
-            // renderScale 对宽高相同，理论上 compX≈compY，取平均更稳
             const compX = compareBaseW / Math.max(renderW, 1);
             const compY = compareBaseH / Math.max(renderH, 1);
             compareRightCompensate = (compX + compY) / 2 || 1;
@@ -5068,8 +5161,11 @@ window.rotateImageByAngle = function (angleDeg) {
 
             compareLayout.classList.remove("active");
 
-            // 还原补偿，避免影响非对比路径
             compareRightCompensate = 1;
+            compareLeftSource = "original";
+
+            const refBtn = document.getElementById("compareReferenceBtn");
+            if (refBtn) refBtn.classList.remove("active-crop");
 
             resizeCursorCanvas();
             fitToScreen();
@@ -5078,6 +5174,49 @@ window.rotateImageByAngle = function (angleDeg) {
             if (btn) btn.classList.remove("active-crop");
             showToast("🔍 已退出对比模式");
           }
+        };
+
+        window.toggleCompareReference = function () {
+          if (!referenceImageData) {
+            showToast("⚠️ 没有参考图");
+            return;
+          }
+
+          if (!isCompareMode) {
+            toggleCompare();
+          }
+
+          compareLeftSource =
+            compareLeftSource === "reference" ? "original" : "reference";
+
+          drawOriginalToCompareCanvas();
+
+          const leftSrc = getCompareLeftImageData();
+          compareBaseW = leftSrc.width;
+          compareBaseH = leftSrc.height;
+
+          const renderW = window.__canvasRenderW || editWidth;
+          const renderH = window.__canvasRenderH || editHeight;
+          const compX = compareBaseW / Math.max(renderW, 1);
+          const compY = compareBaseH / Math.max(renderH, 1);
+          compareRightCompensate = (compX + compY) / 2 || 1;
+
+          fitToScreen();
+          resizeCursorCanvas();
+
+          const btn = document.getElementById("compareReferenceBtn");
+          if (btn) {
+            btn.classList.toggle(
+              "active-crop",
+              compareLeftSource === "reference",
+            );
+          }
+
+          showToast(
+            compareLeftSource === "reference"
+              ? "🔍 左：参考图 / 右：编辑图"
+              : "🔍 左：原图 / 右：编辑图",
+          );
         };
 
         function getMorphCanvas(w, h) {
@@ -5947,9 +6086,8 @@ window.rotateImageByAngle = function (angleDeg) {
             drawAllOverlay(e.clientX, e.clientY);
             return;
           }
-         if (isSelecting) {
+          if (isSelecting) {
             if (currentTool === "rect") {
-              // 矩形工具：Shift 按下时约束为正方形（边长 32 整倍数），否则保持原矩形
               selection = snapSquareSelection(
                 selectStartX,
                 selectStartY,
@@ -5958,7 +6096,6 @@ window.rotateImageByAngle = function (angleDeg) {
                 e.shiftKey,
               );
             } else {
-              // 圆形等其他选区保持原逻辑
               selection = {
                 x: Math.min(selectStartX, x),
                 y: Math.min(selectStartY, y),
@@ -6055,9 +6192,8 @@ window.rotateImageByAngle = function (angleDeg) {
             return;
           }
 
-                    if (isSelecting) {
+          if (isSelecting) {
             isSelecting = false;
-            // 正方形选区最小边 32，普通矩形/圆形最小 3
             const minSide = selection && selection.isSquare ? SQUARE_GRID : 3;
             if (selection && selection.w >= minSide && selection.h >= minSide) {
               applySelection();
@@ -7514,47 +7650,46 @@ window.rotateImageByAngle = function (angleDeg) {
         };
 
         async function initFromURL(url) {
-  try {
-    const resp = await fetch(url);
-    const blob = await resp.blob();
-    const bitmap = await createImageBitmap(blob);
-    const w = bitmap.width, h = bitmap.height;
-    console.log("bitmap:", w, h);
+          try {
+            const resp = await fetch(url);
+            const blob = await resp.blob();
+            const bitmap = await createImageBitmap(blob);
+            const w = bitmap.width,
+              h = bitmap.height;
 
-    const out = new ImageData(w, h);
-    const tile = 1024; // 更小的 tile，避免单块 canvas 触发限制
+            const out = new ImageData(w, h);
+            const tile = 1024; // 更小的 tile，避免单块 canvas 触发限制
 
-    for (let y = 0; y < h; y += tile) {
-      for (let x = 0; x < w; x += tile) {
-        const tw = Math.min(tile, w - x);
-        const th = Math.min(tile, h - y);
+            for (let y = 0; y < h; y += tile) {
+              for (let x = 0; x < w; x += tile) {
+                const tw = Math.min(tile, w - x);
+                const th = Math.min(tile, h - y);
 
-        // 每块用独立的小 canvas 绘制
-        const c = document.createElement("canvas");
-        c.width = tw;
-        c.height = th;
-        const cx = c.getContext("2d", { willReadFrequently: true });
-        cx.drawImage(bitmap, x, y, tw, th, 0, 0, tw, th);
+                const c = document.createElement("canvas");
+                c.width = tw;
+                c.height = th;
+                const cx = c.getContext("2d", { willReadFrequently: true });
+                cx.drawImage(bitmap, x, y, tw, th, 0, 0, tw, th);
 
-        const part = cx.getImageData(0, 0, tw, th);
-        for (let ty = 0; ty < th; ty++) {
-          const srcRow = ty * tw * 4;
-          const dstRow = ((y + ty) * w + x) * 4;
-          out.data.set(part.data.subarray(srcRow, srcRow + tw * 4), dstRow);
+                const part = cx.getImageData(0, 0, tw, th);
+                for (let ty = 0; ty < th; ty++) {
+                  const srcRow = ty * tw * 4;
+                  const dstRow = ((y + ty) * w + x) * 4;
+                  out.data.set(
+                    part.data.subarray(srcRow, srcRow + tw * 4),
+                    dstRow,
+                  );
+                }
+              }
+            }
+
+            bitmap.close();
+            initFromImageData(out, w, h);
+          } catch (e) {
+            console.error("图片加载失败:", e);
+            showToast("⚠️ 图片加载失败: " + e.message);
+          }
         }
-      }
-    }
-
-
-    bitmap.close();
-    initFromImageData(out, w, h);
-  } catch (e) {
-    console.error("图片加载失败:", e);
-    showToast("⚠️ 图片加载失败: " + e.message);
-  }
-}
-
-
 
         function initFromImageData(imgData, w, h) {
           editWidth = w;
@@ -7624,7 +7759,7 @@ window.rotateImageByAngle = function (angleDeg) {
           resetHistory();
 
           updateUI();
-const safeMax0 = probeCanvasMax();
+          const safeMax0 = probeCanvasMax();
           const initScale = Math.min(1, safeMax0 / Math.max(w, h));
           window.__canvasRenderW = Math.max(1, Math.round(w * initScale));
           window.__canvasRenderH = Math.max(1, Math.round(h * initScale));
@@ -7795,16 +7930,52 @@ const safeMax0 = probeCanvasMax();
           updateHistoryButtons();
 
           updateUI();
-const safeMax0 = probeCanvasMax();
-          const initScale = Math.min(1, safeMax0 / Math.max(editWidth, editHeight));
-          window.__canvasRenderW = Math.max(1, Math.round(editWidth * initScale));
-          window.__canvasRenderH = Math.max(1, Math.round(editHeight * initScale));
+          const safeMax0 = probeCanvasMax();
+          const initScale = Math.min(
+            1,
+            safeMax0 / Math.max(editWidth, editHeight),
+          );
+          window.__canvasRenderW = Math.max(
+            1,
+            Math.round(editWidth * initScale),
+          );
+          window.__canvasRenderH = Math.max(
+            1,
+            Math.round(editHeight * initScale),
+          );
           fitToScreen();
           showToast(`✅ 已恢复到上次应用状态: ${editWidth}×${editHeight}`);
         }
 
         function loadImage() {
           const params = new URLSearchParams(window.location.search);
+
+          const referenceId = params.get("referenceId");
+          if (referenceId) {
+            DB.get(referenceId)
+              .then((dataUrl) => {
+                if (!dataUrl) return;
+                return fetch(dataUrl)
+                  .then((r) => r.blob())
+                  .then((blob) => createImageBitmap(blob))
+                  .then((bitmap) => {
+                    const w = bitmap.width,
+                      h = bitmap.height;
+                    const c = document.createElement("canvas");
+                    c.width = w;
+                    c.height = h;
+                    const ctx = c.getContext("2d");
+                    ctx.drawImage(bitmap, 0, 0);
+                    referenceImageData = ctx.getImageData(0, 0, w, h);
+                    bitmap.close();
+                    updateReferenceButton();
+                  });
+              })
+              .catch((e) => console.warn("[BlueBox] 参考图加载失败:", e))
+              .finally(() => {
+                DB.delete(referenceId).catch(() => {});
+              });
+          }
 
           const snapshotId = params.get("snapshotId");
           if (snapshotId) {
@@ -7940,19 +8111,18 @@ const safeMax0 = probeCanvasMax();
           }
 
           if (e.key === " " || e.key === "space" || e.code === "Space") {
-  e.preventDefault();
+            e.preventDefault();
 
-  recalculateDisplaySize();
-  // 用 canvas 实际渲染尺寸做基准，和 fitToScreen 保持一致
-  const baseW = window.__canvasRenderW || editWidth;
-  const baseH = window.__canvasRenderH || editHeight;
-  const fitScale = Math.min(
-    cachedDisplayWidth / baseW,
-    cachedDisplayHeight / baseH,
-  );
-  const fitZoom = Math.max(0.05, Math.min(5, fitScale));
+            recalculateDisplaySize();
+            const baseW = window.__canvasRenderW || editWidth;
+            const baseH = window.__canvasRenderH || editHeight;
+            const fitScale = Math.min(
+              cachedDisplayWidth / baseW,
+              cachedDisplayHeight / baseH,
+            );
+            const fitZoom = Math.max(0.05, Math.min(5, fitScale));
 
-  const isFitted = Math.abs(zoom - fitZoom) < 0.01;
+            const isFitted = Math.abs(zoom - fitZoom) < 0.01;
 
             if (isFitted) {
               resetView();
@@ -8062,7 +8232,7 @@ const safeMax0 = probeCanvasMax();
           e.preventDefault();
         });
 
-                wrapper.addEventListener(
+        wrapper.addEventListener(
           "wheel",
           function (e) {
             e.preventDefault();
@@ -8074,11 +8244,9 @@ const safeMax0 = probeCanvasMax();
 
             if (Math.abs(newZoom - oldZoom) < 1e-6) return;
 
-            // 以"画布当前实际中心"为锚点，单图/对比图通用
-            // 反推未平移时的中心（屏幕坐标）= 当前中心 - pan
             const elRect = canvasContainer.getBoundingClientRect();
-            const cxScreen = (elRect.left + elRect.width / 2) - panX;
-            const cyScreen = (elRect.top + elRect.height / 2) - panY;
+            const cxScreen = elRect.left + elRect.width / 2 - panX;
+            const cyScreen = elRect.top + elRect.height / 2 - panY;
 
             const dx = e.clientX - cxScreen;
             const dy = e.clientY - cyScreen;
@@ -8131,6 +8299,7 @@ const safeMax0 = probeCanvasMax();
           resizeCursorCanvas();
           updateLevelsUI();
           updateResizeUI();
+          updateReferenceButton();
 
           document.addEventListener("dragover", function (e) {
             e.preventDefault();

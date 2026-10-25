@@ -58,3 +58,11 @@ def clear_bridge(node_id):
     nid = str(node_id)
     bridge_image_cache.pop(nid, None)
     bridge_continue_seq.pop(nid, None)
+
+_bridge_reference = {}
+
+def set_bridge_reference(node_id, image_path):
+    _bridge_reference[str(node_id)] = image_path
+
+def get_bridge_reference(node_id):
+    return _bridge_reference.get(str(node_id))

@@ -152,13 +152,7 @@ class BlueBoxBridge:
       - 点"继续"  → 用编辑器烘焙图（磁盘缓存）作为输出。
       - 点"运行"  → 无论上游变没变，一律重新注入上游原图，走占位刷新流程。
 
-    "继续"由前端 /bluebox/bridge_continue 设置一个递增序号，
-    doit 消费一次即清除。IS_CHANGED 用该序号作为返回值，
-    保证每次"继续"都让 ComfyUI 认为节点已变、必须重跑 doit。
-
-    block = never              ：无条件放行
-    block = if_not_continued   ：未点"继续"时返回 ExecutionBlocker，下游停；
-                                 点"继续"后自动重跑并放行
+    optional.reference：仅用于编辑器"对比参考图"，不参与主输出、不影响 block。
     """
 
     @classmethod
@@ -177,6 +171,7 @@ class BlueBoxBridge:
                         "never：从不停止，直接放行。"
                     ),
                 }),
+                "reference": ("IMAGE",),
             },
             "hidden": {
                 "unique_id": "UNIQUE_ID",
@@ -189,10 +184,26 @@ class BlueBoxBridge:
     OUTPUT_NODE = True
     CATEGORY = "BlueBox"
 
-    def doit(self, image, block=False, unique_id=None):
+    def doit(self, image, block=False, unique_id=None, reference=None):
         node_id = str(unique_id)
 
-        # 本次执行是不是"继续"触发的？消费即清除。
+        if reference is not None:
+            try:
+                ref_img = reference[0].cpu().numpy()
+                if ref_img.ndim == 3 and ref_img.shape[-1] >= 3:
+                    ref_img = ref_img[..., :3]
+                ref_u8 = np.clip(ref_img * 255, 0, 255).astype(np.uint8)
+                ref_pil = Image.fromarray(ref_u8, mode="RGB")
+                temp_dir = folder_paths.get_temp_directory()
+                sub_dir = os.path.join(temp_dir, "BlueBoxBridge")
+                os.makedirs(sub_dir, exist_ok=True)
+                ref_fname = "bb_ref_{}_{}.png".format(node_id, uuid.uuid4().hex[:8])
+                ref_fpath = os.path.join(sub_dir, ref_fname)
+                ref_pil.save(ref_fpath)
+                core.set_bridge_reference(node_id, ref_fpath)
+            except Exception as e:
+                print("[BlueBox] 参考图保存失败:", e)
+
         continued = core.consume_bridge_continued(node_id)
 
         if continued:
@@ -210,13 +221,17 @@ class BlueBoxBridge:
                     "type": "input",
                 }]
 
-                return self._finalize(node_id, ui_preview, pixels, mask, block, continued)
+                return self._finalize(
+                    node_id, ui_preview, pixels, mask, block, continued,
+                    reference=reference,
+                )
 
             print(f"[BlueBox] Bridge 收到继续标记但无烘焙图，回退重新注入")
 
-        # ---- 重新注入：把上游图存 temp 当占位 ----
-        rgb_np_u8 = image[0].cpu().numpy()
-        rgb_np_u8 = np.clip(rgb_np_u8 * 255, 0, 255).astype(np.uint8)
+        img = image[0].cpu().numpy()
+        if img.ndim == 3 and img.shape[-1] >= 3:
+            img = img[..., :3]
+        rgb_np_u8 = np.clip(img * 255, 0, 255).astype(np.uint8)
         pil = Image.fromarray(rgb_np_u8, mode="RGB")
 
         temp_dir = folder_paths.get_temp_directory()
@@ -244,15 +259,17 @@ class BlueBoxBridge:
             "type": "temp",
         }]
 
-        return self._finalize(node_id, ui_preview, image_tensor, mask, block, continued)
+        return self._finalize(
+            node_id, ui_preview, image_tensor, mask, block, continued,
+            reference=reference,
+        )
 
-    def _finalize(self, node_id, images_ui, pixels, mask, block, continued):
-        """
-        放行判定：
-          - block=False                → 无条件放行
-          - block=True 且未点"继续"    → ExecutionBlocker（下游停）
-          - block=True 且已点"继续"    → 放行
-        """
+    def _finalize(self, node_id, images_ui, pixels, mask, block, continued,
+                  reference=None):
+        ui = {"images": images_ui}
+        if reference is not None:
+            ui["reference_present"] = [True]
+
         should_block = False
         if block and not continued:
             should_block = True
@@ -261,28 +278,22 @@ class BlueBoxBridge:
             try:
                 from comfy_execution.graph import ExecutionBlocker
                 return {
-                    "ui": {"images": images_ui},
+                    "ui": ui,
                     "result": (ExecutionBlocker(None), ExecutionBlocker(None)),
                 }
             except Exception as e:
                 print(f"[BlueBox] ExecutionBlocker 不可用（{e}），block 被忽略")
                 return {
-                    "ui": {"images": images_ui},
+                    "ui": ui,
                     "result": (pixels, mask),
                 }
 
         return {
-            "ui": {"images": images_ui},
+            "ui": ui,
             "result": (pixels, mask),
         }
 
     def _load_from_disk(self, image_path, mask_path):
-        """
-        读磁盘烘焙图。
-        完全以烘焙图自身为准，不与上游 tensor 比对尺寸
-        （编辑器支持裁切/扩图/旋转/缩放，几何可变是合法的）。
-        遮罩只校验与主图自洽。
-        """
         i = Image.open(image_path)
         i = ImageOps.exif_transpose(i)
         rgb = i.convert("RGB")
@@ -312,9 +323,6 @@ class BlueBoxBridge:
     @classmethod
     def IS_CHANGED(cls, image, block=False, unique_id=None):
         node_id = str(unique_id) if unique_id else ""
-        # 用"继续序号"作为变化因子：
-        #   每次点继续，序号 +1，返回值必然不同 → ComfyUI 一定重跑 doit。
-        #   点运行时序号为 0（或与上次不同），也会重跑，走刷新分支。
         seq = core.get_bridge_continue_seq(node_id)
         block_flag = 1 if block else 0
         return f"{seq}_{block_flag}"
