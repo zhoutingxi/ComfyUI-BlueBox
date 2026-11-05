@@ -101,7 +101,8 @@ def _verify_fixed_point(w, h, resolution):
 def _center_crop_to(image, tw, th):
     squeeze = False
     if image.dim() == 3:
-        image = image.unsqueeze(0); squeeze = True
+        image = image.unsqueeze(0)
+        squeeze = True
     b, h, w, c = image.shape
     scale = max(tw / w, th / h)
     nw = max(tw, int(round(w * scale)))
@@ -120,7 +121,8 @@ def _center_crop_to(image, tw, th):
 def _pad_to(image, tw, th, pad_color=0.0):
     squeeze = False
     if image.dim() == 3:
-        image = image.unsqueeze(0); squeeze = True
+        image = image.unsqueeze(0)
+        squeeze = True
     b, h, w, c = image.shape
     scale = min(tw / w, th / h)
     nw = max(1, int(round(w * scale)))
@@ -140,7 +142,8 @@ def _pad_to(image, tw, th, pad_color=0.0):
 def _stretch_to(image, tw, th):
     squeeze = False
     if image.dim() == 3:
-        image = image.unsqueeze(0); squeeze = True
+        image = image.unsqueeze(0)
+        squeeze = True
     img = image.permute(0, 3, 1, 2)
     img = torch.nn.functional.interpolate(img, size=(th, tw), mode="bilinear", align_corners=False)
     img = img.permute(0, 2, 3, 1)
