@@ -70,6 +70,7 @@ git clone https://github.com/zhoutingxi/ComfyUI-BlueBox.git ComfyUI-BlueBox
 - **浏览器**：需支持 **WebGL** 与 **IndexedDB**。
   - 推荐 Chrome / Edge（兼容性最稳、无存储过期问题）。
   - Safari 对 IndexedDB 有 **7 天未访问自动清除** 的策略，可能导致编辑快照丢失，建议尽快操作。
+  - 支持通过局域网 HTTP 地址回填编辑结果；`crypto.subtle` 不可用时，上传文件使用随机标识命名。
 
 ---
 

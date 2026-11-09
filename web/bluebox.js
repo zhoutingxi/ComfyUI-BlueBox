@@ -85,9 +85,9 @@ async function uploadDataUrlToComfy(dataUrl, namePrefix) {
   try {
     const resp = await fetch(dataUrl);
     const blob = await resp.blob();
-    const buf = await blob.arrayBuffer();
-    const digest = await crypto.subtle.digest("SHA-256", buf);
-    const bytes = new Uint8Array(digest);
+    const bytes = crypto.subtle
+      ? new Uint8Array(await crypto.subtle.digest("SHA-256", await blob.arrayBuffer()))
+      : crypto.getRandomValues(new Uint8Array(8));
     let hex = "";
     for (let i = 0; i < 8; i++) hex += bytes[i].toString(16).padStart(2, "0");
     const ext = blob.type.includes("jpeg")
