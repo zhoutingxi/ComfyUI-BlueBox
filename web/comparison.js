@@ -2,11 +2,32 @@
 import { app } from "../../scripts/app.js";
 import { makeUUID, chainCallback } from "./bluebox_utils.js";
 
+function buildViewUrl(filename, subfolder, type) {
+  return (
+    "/view?filename=" +
+    encodeURIComponent(filename) +
+    "&subfolder=" +
+    encodeURIComponent(subfolder || "") +
+    "&type=" +
+    encodeURIComponent(type || "temp")
+  );
+}
+
+function pickFirst(v) {
+  return Array.isArray(v) ? v[0] : v;
+}
+
+function extFromMime(mime, fallback) {
+  if (mime === "image/webp") return "webp";
+  if (mime === "image/png") return "png";
+  return fallback || "png";
+}
+
 app.registerExtension({
-  name: 'BlueBox.ComparisonImage',
+  name: "BlueBox.ComparisonImage",
 
   async beforeRegisterNodeDef(nodeType, nodeData) {
-    if (nodeData?.name !== 'BlueBoxComparisonImage') return;
+    if (nodeData?.name !== "BlueBoxComparisonImage") return;
 
     chainCallback(nodeType.prototype, "onNodeCreated", function () {
       // ===== 外层容器 =====
@@ -25,7 +46,7 @@ app.registerExtension({
       `;
       element.appendChild(stage);
 
-      // ===== 底部尺寸文字 =====
+      // ===== 底部尺寸/格式文字 =====
       const infoBar = document.createElement("div");
       infoBar.style.cssText = `
         flex: 0 0 auto; padding: 2px 6px; text-align: center;
@@ -36,10 +57,7 @@ app.registerExtension({
       `;
       element.appendChild(infoBar);
 
-      // ===== 两个图层容器 + 两张图 =====
-      // 两个 layer 都是 stage 全尺寸、同中心，图片各自 contain 居中。
-      // 上层 layerB 用相对自身（= stage）的 clip-path 百分比裁剪，
-      // 因此 clip 边界、divider.left、鼠标坐标天然在同一 stage 布局坐标系。
+      // ===== 两个图层 + 两张图（都用 /view URL，浏览器原生降采样） =====
       const layerA = document.createElement("div");
       layerA.style.cssText = `position: absolute; inset: 0; overflow: hidden;`;
 
@@ -54,16 +72,16 @@ app.registerExtension({
 
       const imgA = document.createElement("img");
       imgA.style.cssText = imgStyle;
+      imgA.draggable = false;
 
       const imgB = document.createElement("img");
       imgB.style.cssText = imgStyle;
+      imgB.draggable = false;
 
       layerA.appendChild(imgA);
       layerB.appendChild(imgB);
 
       // ===== 分割线 =====
-      // width:0 + box-shadow 画线：不占布局、无半像素平移问题。
-      // 具体粗细在 applyRatio 里按画布 zoom 反向补偿。
       const divider = document.createElement("div");
       divider.style.cssText = `
         position: absolute; top: 0; bottom: 0; left: 50%;
@@ -95,12 +113,10 @@ app.registerExtension({
 
       stage.append(layerA, layerB, divider, labelAEl, labelBEl);
 
-      // ===== 拖动逻辑（统一 stage 布局坐标，抗画布 zoom） =====
+      // ===== 拖动逻辑 =====
       let dragging = false;
       let ratio = 0.5;
 
-      // 将 client 坐标换算成 stage 的本地布局像素
-      // （getBoundingClientRect 含画布 transform 缩放，除以 r.width/offsetWidth 还原）
       const toStageLocalX = (clientX) => {
         const r = stage.getBoundingClientRect();
         const s = r.width / (stage.offsetWidth || 1);
@@ -108,27 +124,24 @@ app.registerExtension({
       };
 
       const applyRatio = () => {
-  const sw = stage.clientWidth;
-  if (sw <= 0) return;
+        const sw = stage.clientWidth;
+        if (sw <= 0) return;
+        const x = Math.round(ratio * sw);
+        layerB.style.clipPath = `inset(0 0 0 ${x}px)`;
+        divider.style.left = `${x}px`;
 
-  // 同一整数像素：裁剪与滑块严格对齐
-  const x = Math.round(ratio * sw);
-
-  layerB.style.clipPath = `inset(0 0 0 ${x}px)`;
-  divider.style.left = `${x}px`;
-
-  const zoom = app?.canvas?.ds?.scale || 1;
-  const spread = 0.5 / Math.max(zoom, 0.01);
-  divider.style.boxShadow = `0 0 0 ${spread}px rgba(255,255,255,.85)`;
-};
+        const zoom = app?.canvas?.ds?.scale || 1;
+        const spread = 0.5 / Math.max(zoom, 0.01);
+        divider.style.boxShadow = `0 0 0 ${spread}px rgba(255,255,255,.85)`;
+      };
 
       const setRatioFromClientX = (clientX) => {
-  const sw = stage.clientWidth;
-  if (sw <= 0) return;
-  const localX = toStageLocalX(clientX);
-  ratio = Math.min(1, Math.max(0, localX / sw));
-  applyRatio();
-};
+        const sw = stage.clientWidth;
+        if (sw <= 0) return;
+        const localX = toStageLocalX(clientX);
+        ratio = Math.min(1, Math.max(0, localX / sw));
+        applyRatio();
+      };
 
       const resync = () => applyRatio();
 
@@ -159,7 +172,7 @@ app.registerExtension({
       const ro = new ResizeObserver(() => resync());
       ro.observe(stage);
 
-      // ===== 监听画布 zoom/pan，同步分割线粗细 =====
+      // ===== 画布 zoom/pan 同步分割线粗细 =====
       const ds = app?.canvas?.ds;
       let prevOnChanged = null;
       if (ds) {
@@ -170,7 +183,7 @@ app.registerExtension({
         };
       }
 
-      // ===== 滚轮 =====
+      // ===== 滚轮透传 =====
       stage.addEventListener("wheel", (e) => {
         const canvas = this.graph?.canvas ?? app.canvas;
         if (canvas && typeof canvas.processMouseWheel === "function") {
@@ -179,7 +192,7 @@ app.registerExtension({
         e.preventDefault();
       }, { passive: false });
 
-      // ===== 右键 =====
+      // ===== 右键透传 =====
       stage.addEventListener("contextmenu", (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -197,7 +210,7 @@ app.registerExtension({
         }
       });
 
-      // ===== 中键 =====
+      // ===== 中键透传 =====
       let middleDragging = false;
       stage.addEventListener("pointerdown", (e) => {
         if (e.button !== 1) return;
@@ -268,30 +281,82 @@ app.registerExtension({
         }
       });
 
-      // ===== onExecuted =====
+      // ===== onExecuted：只拿小字段，图像走 /view =====
       chainCallback(this, "onExecuted", function (message) {
         if (!message) return;
 
-        const aB64 = message["image_a"]?.[0];
-        const bB64 = message["image_b"]?.[0];
-        if (!aB64 || !bB64) return;
+        const subfolder = pickFirst(message["subfolder"]) || "BlueBoxComparisonImage";
+        const type = pickFirst(message["type"]) || "temp";
 
-        const aMime = message["image_a_mime"]?.[0] || "image/webp";
-        const bMime = message["image_b_mime"]?.[0] || "image/webp";
-        const sizeA = message["size_a"]?.[0] ?? null;
-        const sizeB = message["size_b"]?.[0] ?? null;
+        const aPrevFname = pickFirst(message["a_preview_filename"]);
+        const aPrevMime = pickFirst(message["a_preview_mime"]) || "image/webp";
+        const aPrevSize = pickFirst(message["a_preview_size"]) ?? null;
+        const aOrigFname = pickFirst(message["a_orig_filename"]);
+        const aOrigMime = pickFirst(message["a_orig_mime"]) || aPrevMime;
+        const aOrigSize = pickFirst(message["a_orig_size"]) ?? aPrevSize;
 
-        this.properties.cmpA = { base64: aB64, type: aMime, size: sizeA };
-        this.properties.cmpB = { base64: bB64, type: bMime, size: sizeB };
+        const bPrevFname = pickFirst(message["b_preview_filename"]);
+        const bPrevMime = pickFirst(message["b_preview_mime"]) || "image/webp";
+        const bPrevSize = pickFirst(message["b_preview_size"]) ?? null;
+        const bOrigFname = pickFirst(message["b_orig_filename"]);
+        const bOrigMime = pickFirst(message["b_orig_mime"]) || bPrevMime;
+        const bOrigSize = pickFirst(message["b_orig_size"]) ?? bPrevSize;
 
-        imgA.src = `data:${aMime};base64,${aB64}`;
-        imgB.src = `data:${bMime};base64,${bB64}`;
+        if (!aPrevFname || !bPrevFname) return;
 
-        const fmt = (s) => (Array.isArray(s) && s.length === 2) ? `${s[0]}×${s[1]}` : "?";
-        const same = sizeA && sizeB && sizeA[0] === sizeB[0] && sizeA[1] === sizeB[1];
-        infoBar.textContent = same
-          ? `${fmt(sizeA)}`
-          : `A: ${fmt(sizeA)}  |  B: ${fmt(sizeB)}`;
+        const aPrevUrl = buildViewUrl(aPrevFname, subfolder, type);
+        const bPrevUrl = buildViewUrl(bPrevFname, subfolder, type);
+        const aOrigUrl = aOrigFname ? buildViewUrl(aOrigFname, subfolder, type) : aPrevUrl;
+        const bOrigUrl = bOrigFname ? buildViewUrl(bOrigFname, subfolder, type) : bPrevUrl;
+
+        this.properties.cmpA = {
+          previewUrl: aPrevUrl,
+          origUrl: aOrigUrl,
+          previewMime: aPrevMime,
+          origMime: aOrigMime,
+          previewSize: aPrevSize,
+          origSize: aOrigSize,
+        };
+        this.properties.cmpB = {
+          previewUrl: bPrevUrl,
+          origUrl: bOrigUrl,
+          previewMime: bPrevMime,
+          origMime: bOrigMime,
+          previewSize: bPrevSize,
+          origSize: bOrigSize,
+        };
+
+        // 先清空再赋值，避免浏览器沿用旧缓存
+        imgA.removeAttribute("src");
+        imgB.removeAttribute("src");
+        imgA.src = aPrevUrl;
+        imgB.src = bPrevUrl;
+
+        // ===== infoBar：尺寸 + 实际下载格式 =====
+        const fmtSize = (s) =>
+          Array.isArray(s) && s.length === 2 ? `${s[0]}×${s[1]}` : "?";
+        const fmtMime = (m) => (m === "image/png" ? "PNG" : m === "image/webp" ? "WEBP" : "?");
+
+        const same =
+          aOrigSize && bOrigSize &&
+          aOrigSize[0] === bOrigSize[0] && aOrigSize[1] === bOrigSize[1];
+
+        let text = same
+          ? `${fmtSize(aOrigSize)}`
+          : `A: ${fmtSize(aOrigSize)}  |  B: ${fmtSize(bOrigSize)}`;
+
+        // 原图格式与预览格式不同（WEBP 回退 PNG）时提示
+        const aDl = fmtMime(aOrigMime);
+        const bDl = fmtMime(bOrigMime);
+        text += `  ·  Download: A ${aDl} / B ${bDl}`;
+
+        const fb = pickFirst(message["webp_fallback"]);
+        if (fb && (fb.a || fb.b)) {
+          const who = [fb.a ? "A" : null, fb.b ? "B" : null].filter(Boolean).join("/");
+          text += `  (WEBP→PNG fallback: ${who})`;
+        }
+
+        infoBar.textContent = text;
         infoBar.style.display = "block";
 
         imgA.onload = () => resync();
@@ -301,32 +366,40 @@ app.registerExtension({
     }); // onNodeCreated
   },
 
-  // ===== 右键菜单 =====
+  // ===== 右键菜单：Open/Save/Copy 走全尺寸原图，扩展名跟随实际 mime =====
   getNodeMenuItems(node) {
     const items = [];
     if (node?.comfyClass !== 'BlueBoxComparisonImage') return items;
 
     const mkGroup = (title, data) => {
-      if (!data?.base64) return [];
-      const mime = data.type || "image/webp";
-      const url = `data:${mime};base64,${data.base64}`;
-      const ext = mime === "image/png" ? "png" : "webp";
+      if (!data?.origUrl) return [];
+      const url = data.origUrl;
+      const ext = extFromMime(data.origMime, "png");
 
       return [
         {
           content: `Open ${title}`,
           callback: () => {
-            const w = window.open("");
-            w.document.write(`<img src="${url}" style="max-width:100%">`);
+            window.open(url, "_blank");
           }
         },
         {
           content: `Save ${title}`,
-          callback: () => {
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `bluebox_compare_${title}.${ext}`;
-            a.click();
+          callback: async () => {
+            try {
+              const resp = await fetch(url);
+              const blob = await resp.blob();
+              const blobUrl = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = blobUrl;
+              a.download = `bluebox_compare_${title}.${ext}`;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+            } catch (e) {
+              console.error("[BlueBox] Save failed", e);
+            }
           }
         },
         {
@@ -336,7 +409,7 @@ app.registerExtension({
               const blob = await (await fetch(url)).blob();
               await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
             } catch (e) {
-              console.error("Copy failed", e);
+              console.error("[BlueBox] Copy failed", e);
             }
           }
         },

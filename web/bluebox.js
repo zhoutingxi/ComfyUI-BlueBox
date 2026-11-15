@@ -3,6 +3,7 @@ import { app } from "/scripts/app.js";
 import { api } from "/scripts/api.js";
 
 const EXT_BASE = "/extensions/ComfyUI-BlueBox";
+const PREVIEW_MAX_EDGE = 2048;
 
 const BB_DB = {
   dbName: "MaskEditorDB",
@@ -62,6 +63,20 @@ const BB_DB = {
   },
 };
 
+function chainCallback(object, property, callback) {
+  if (!object) return;
+  if (property in object) {
+    const orig = object[property];
+    object[property] = function () {
+      const r = orig.apply(this, arguments);
+      callback.apply(this, arguments);
+      return r;
+    };
+  } else {
+    object[property] = callback;
+  }
+}
+
 function extractUrlFromImgEntry(entry) {
   if (!entry) return null;
   if (typeof entry === "string") return entry;
@@ -79,6 +94,47 @@ function extractUrlFromImgEntry(entry) {
     );
   }
   return null;
+}
+
+function bbPreviewUrl(filename, subfolder, type, maxEdge) {
+  return (
+    "/bluebox/preview?filename=" +
+    encodeURIComponent(filename) +
+    "&subfolder=" +
+    encodeURIComponent(subfolder || "") +
+    "&type=" +
+    encodeURIComponent(type || "input") +
+    "&max_edge=" +
+    encodeURIComponent(String(maxEdge || PREVIEW_MAX_EDGE))
+  );
+}
+
+async function loadPreviewImage(filename, subfolder, type) {
+  const url = bbPreviewUrl(filename, subfolder, type, PREVIEW_MAX_EDGE);
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.src = url;
+  await new Promise((res) => {
+    if (img.complete && img.naturalWidth > 0) return res();
+    img.onload = () => res();
+    img.onerror = () => res();
+  });
+  return img;
+}
+
+async function loadInputImage(filename) {
+  const url =
+    "/view?filename=" +
+    encodeURIComponent(filename) +
+    "&subfolder=&type=input";
+  const img = new Image();
+  img.src = url;
+  await new Promise((res) => {
+    if (img.complete && img.naturalWidth > 0) return res();
+    img.onload = () => res();
+    img.onerror = () => res();
+  });
+  return img;
 }
 
 async function uploadDataUrlToComfy(dataUrl, namePrefix) {
@@ -111,32 +167,6 @@ async function uploadDataUrlToComfy(dataUrl, namePrefix) {
   }
 }
 
-async function triggerRerun() {
-  try {
-    if (!app || !app.graphToPrompt) {
-      console.warn("[BlueBox] app.graphToPrompt 不可用");
-      return;
-    }
-    const p = await app.graphToPrompt();
-    const clientId = api && api.clientId ? api.clientId : "bluebox";
-    const res = await fetch("/prompt", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        prompt: p.output,
-        client_id: clientId,
-      }),
-    });
-    if (!res.ok) {
-      console.warn("[BlueBox] /prompt 返回错误:", res.status, await res.text());
-    } else {
-      console.log("[BlueBox] /prompt 入队成功");
-    }
-  } catch (e) {
-    console.warn("[BlueBox] /prompt 调用失败:", e);
-  }
-}
-
 window._bbEditTargetNode = null;
 window._bbEditNodeId = null;
 let _bbPollTimer = null;
@@ -150,10 +180,39 @@ function getBridgeCurrentImageMeta(node) {
   return meta;
 }
 
+async function fetchLatestReferenceDataUrl(node) {
+  if (!node || node.comfyClass !== "BlueBoxBridge") return null;
+  const nodeId = node.__bbNodeId || String(node.id);
+  try {
+    const resp = await fetch(
+      "/bluebox/bridge_reference_image?node_id=" + encodeURIComponent(nodeId),
+    );
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    if (!data.ok || !data.image?.filename) return null;
+    const refUrl =
+      "/view?filename=" +
+      encodeURIComponent(data.image.filename) +
+      "&subfolder=" +
+      encodeURIComponent(data.image.subfolder || "") +
+      "&type=" +
+      encodeURIComponent(data.image.type || "temp");
+    const r = await fetch(refUrl);
+    if (!r.ok) return null;
+    const blob = await r.blob();
+    return await new Promise((res) => {
+      const fr = new FileReader();
+      fr.onload = () => res(fr.result);
+      fr.readAsDataURL(blob);
+    });
+  } catch (e) {
+    return null;
+  }
+}
+
 async function openBlueBoxEditor(node) {
   node.__bbNodeId = String(node.id);
   const nodeId = node.__bbNodeId;
-  console.log("[BlueBox] 打开编辑器，锁定 nodeId =", nodeId);
 
   let url = null;
 
@@ -165,7 +224,7 @@ async function openBlueBoxEditor(node) {
     }
   }
 
-    const imgWidget = node.widgets?.find((w) => w.name === "image");
+  const imgWidget = node.widgets?.find((w) => w.name === "image");
   if (
     !url &&
     imgWidget &&
@@ -176,17 +235,13 @@ async function openBlueBoxEditor(node) {
       "/view?filename=" +
       encodeURIComponent(imgWidget.value) +
       "&subfolder=&type=input";
-  } else if (!url && node.imgs && node.imgs.length > 0) {
-    url = extractUrlFromImgEntry(node.imgs[0]);
   }
 
-  // 兜底：Bridge 在 block 状态下 imgs 可能为空，直接向后端要当前图
   if (!url && node.comfyClass === "BlueBoxBridge") {
     try {
-      const nodeId = node.__bbNodeId || String(node.id);
+      const nodeId2 = node.__bbNodeId || String(node.id);
       const resp = await fetch(
-        "/bluebox/bridge_current_image?node_id=" +
-          encodeURIComponent(nodeId),
+        "/bluebox/bridge_current_image?node_id=" + encodeURIComponent(nodeId2),
       );
       if (resp.ok) {
         const data = await resp.json();
@@ -203,6 +258,10 @@ async function openBlueBoxEditor(node) {
     } catch (e) {
       console.warn("[BlueBox] Bridge 兜底取图失败:", e);
     }
+  }
+
+  if (!url && node.imgs && node.imgs.length > 0) {
+    url = extractUrlFromImgEntry(node.imgs[0]);
   }
 
   if (!url) {
@@ -238,58 +297,34 @@ async function openBlueBoxEditor(node) {
   if (snapshot) {
     if (isBridge) {
       const meta = getBridgeCurrentImageMeta(node);
-      console.log("[BlueBox] Bridge 当前图元信息:", meta);
-
       if (!meta) {
-        console.log("[BlueBox] Bridge 无当前图元信息，快照作废");
         snapshot = null;
         BB_DB.delete(snapshotKey).catch(() => {});
       } else if (meta.subfolder === "BlueBoxBridge") {
-        console.log("[BlueBox] Bridge 当前为占位图，快照作废");
         snapshot = null;
         BB_DB.delete(snapshotKey).catch(() => {});
       } else {
         const snapshotSource = snapshot.bridgeSourceImage || null;
         if (!snapshotSource) {
-          console.log("[BlueBox] Bridge 快照无来源记录，作废");
           snapshot = null;
           BB_DB.delete(snapshotKey).catch(() => {});
         } else if (snapshotSource !== meta.filename) {
-          console.log(
-            "[BlueBox] Bridge 烘焙图已更换，快照作废:",
-            snapshotSource,
-            "→",
-            meta.filename,
-          );
           snapshot = null;
           BB_DB.delete(snapshotKey).catch(() => {});
-        } else {
-          console.log("[BlueBox] Bridge 快照有效，保留");
         }
       }
     } else if (node.comfyClass === "BlueBoxAllPreview") {
-      console.log("[BlueBox] BlueBoxAllPreview 快照作废（每次都用当前图）");
       snapshot = null;
       BB_DB.delete(snapshotKey).catch(() => {});
     } else {
       const snapshotSource = snapshot.sourceImage || null;
       const currentImage = imgWidget?.value || null;
-
       if (!snapshotSource) {
-        console.log("[BlueBox] LoadImage 快照无来源记录，作废");
         snapshot = null;
         BB_DB.delete(snapshotKey).catch(() => {});
       } else if (currentImage && snapshotSource !== currentImage) {
-        console.log(
-          "[BlueBox] LoadImage 图已换，快照作废:",
-          snapshotSource,
-          "→",
-          currentImage,
-        );
         snapshot = null;
         BB_DB.delete(snapshotKey).catch(() => {});
-      } else {
-        console.log("[BlueBox] LoadImage 快照有效，保留");
       }
     }
   }
@@ -301,49 +336,43 @@ async function openBlueBoxEditor(node) {
   window._bbEditTargetNode = node;
   window._bbEditNodeId = nodeId;
 
-if (!node.__bbReferenceKey && node.comfyClass === "BlueBoxBridge") {
+  if (node.__bbReferencePending) {
     try {
-      const nodeId = node.__bbNodeId || String(node.id);
-      const resp = await fetch(
-        "/bluebox/bridge_reference_image?node_id=" + encodeURIComponent(nodeId),
-      );
-      if (resp.ok) {
-        const data = await resp.json();
-        if (data.ok && data.image?.filename) {
-          const refUrl =
-            "/view?filename=" +
-            encodeURIComponent(data.image.filename) +
-            "&subfolder=" +
-            encodeURIComponent(data.image.subfolder || "") +
-            "&type=" +
-            encodeURIComponent(data.image.type || "temp");
-          const r = await fetch(refUrl);
-          const blob = await r.blob();
-          const dataUrl = await new Promise((res) => {
-            const fr = new FileReader();
-            fr.onload = () => res(fr.result);
-            fr.readAsDataURL(blob);
-          });
-          const key = "bb_reference_" + nodeId;
-          await BB_DB.put(key, dataUrl);
-          node.__bbReferenceKey = key;
-        }
-      }
-    } catch (e) {
-      console.warn("[BlueBox] 兜底获取参考图失败:", e);
+      await node.__bbReferencePending;
+    } catch (e) {}
+  }
+
+  let refKey = null;
+  let refData = null;
+
+  if (isBridge) {
+    refData = await fetchLatestReferenceDataUrl(node);
+    if (refData) {
+      refKey =
+        "bb_reference_" +
+        nodeId +
+        "_" +
+        Date.now().toString(36) +
+        "_" +
+        Math.random().toString(36).slice(2, 6);
+      await BB_DB.put(refKey, refData);
+      node.__bbReferenceKey = refKey;
     }
   }
 
-  // 参考图：仅当节点上缓存了 reference key 且数据存在时传入
-  let referenceParam = "";
-  const refKey = node.__bbReferenceKey || null;
-  if (refKey) {
-    const refData = await BB_DB.get(refKey).catch(() => null);
-    if (refData) {
-      referenceParam = `&referenceId=${encodeURIComponent(refKey)}`;
-    } else {
-      node.__bbReferenceKey = null;
+  if (!refData && node.__bbReferenceKey) {
+    const cached = await BB_DB.get(node.__bbReferenceKey).catch(() => null);
+    if (cached) {
+      refData = cached;
+      refKey = node.__bbReferenceKey;
     }
+  }
+
+  let referenceParam = "";
+  if (refData && refKey) {
+    referenceParam = `&referenceId=${encodeURIComponent(refKey)}`;
+  } else {
+    node.__bbReferenceKey = null;
   }
 
   const baseParam = snapshot
@@ -434,9 +463,6 @@ async function handleMaskResult(payload) {
         node.previewWidget.element.style.backgroundImage = `url(${mainDataUrl})`;
       }
       node.setDirtyCanvas?.(true, true);
-      console.log("[BlueBox] BlueBoxAllPreview 预览已回填");
-    } else {
-      console.warn("[BlueBox] 回填 dataURL 解析失败");
     }
 
     window._bbEditTargetNode = null;
@@ -503,17 +529,6 @@ async function handleMaskResult(payload) {
     }
 
     const nodeId = node.__bbNodeId || String(node.id);
-    console.log("[BlueBox] Bridge 注册 nodeId =", nodeId, "node.id =", node.id);
-    console.log(
-      "[BlueBox] Bridge 注册 node_id =",
-      nodeId,
-      "main =",
-      mainName,
-      "mask =",
-      maskName,
-      "preview =",
-      previewName,
-    );
 
     try {
       await fetch("/bluebox/bridge_register", {
@@ -524,6 +539,7 @@ async function handleMaskResult(payload) {
           image_filename: mainName,
           mask_filename: maskName,
           preview_filename: previewName,
+          source_hash: node.__bbSourceHash || null,
         }),
       });
     } catch (e) {
@@ -531,25 +547,11 @@ async function handleMaskResult(payload) {
     }
 
     const displayName = previewName || mainName;
-    const displayUrl =
-      "/view?filename=" +
-      encodeURIComponent(displayName) +
-      "&subfolder=&type=input";
-
-    const imgObj = new Image();
-    imgObj.src = displayUrl;
-    try {
-      await imgObj.decode();
-    } catch (e) {
-      console.warn("[BlueBox] Bridge decode 失败，回退 onload:", e);
-      await new Promise((res) => {
-        if (imgObj.complete) return res();
-        imgObj.onload = () => res();
-        imgObj.onerror = () => res();
-      });
+    const imgObj = await loadPreviewImage(displayName, "", "input");
+    if (imgObj && imgObj.naturalWidth > 0) {
+      node.imgs = [imgObj];
+      node.setDirtyCanvas?.(true, true);
     }
-    node.imgs = [imgObj];
-    node.setDirtyCanvas?.(true, true);
 
     node.__bbCurrentImageMeta = {
       filename: displayName,
@@ -566,10 +568,6 @@ async function handleMaskResult(payload) {
         }
       })
       .catch(() => {});
-
-    console.log(
-      "[BlueBox] Bridge 编辑结果已就绪，请点击节点上的「继续」按钮放行",
-    );
 
     window._bbEditTargetNode = null;
     window._bbEditNodeId = null;
@@ -595,18 +593,12 @@ async function handleMaskResult(payload) {
     );
   }
 
-  let previewUrl2 = null;
+  let previewServerName = null;
   if (payload.previewImage) {
-    const previewServerName = await uploadDataUrlToComfy(
+    previewServerName = await uploadDataUrlToComfy(
       payload.previewImage,
       `bb_${sharedHash}_preview`,
     );
-    if (previewServerName) {
-      previewUrl2 =
-        "/view?filename=" +
-        encodeURIComponent(previewServerName) +
-        "&subfolder=&type=input";
-    }
   }
 
   const imgWidget2 = node.widgets?.find((w) => w.name === "image");
@@ -626,26 +618,38 @@ async function handleMaskResult(payload) {
     node.__bbSuppressMaskClear = false;
   }, 800);
 
-  const displayUrl =
-    previewUrl2 ||
-    "/view?filename=" +
-      encodeURIComponent(serverName) +
-      "&subfolder=&type=input";
-  if (displayUrl) {
-    const imgObj = new Image();
-    imgObj.src = displayUrl;
-    try {
-      await imgObj.decode();
-    } catch (e) {
-      console.warn("[BlueBox] decode 失败，回退 onload:", e);
-      await new Promise((res) => {
-        if (imgObj.complete) return res();
-        imgObj.onload = () => res();
-        imgObj.onerror = () => res();
-      });
-    }
-    node.imgs = [imgObj];
+  const displayName = previewServerName || serverName;
+  const previewImg = await loadInputImage(displayName);
+  if (previewImg && previewImg.naturalWidth > 0) {
+    node.imgs = [previewImg];
     node.setDirtyCanvas?.(true, true);
+    requestAnimationFrame(() => node.setDirtyCanvas?.(true, true));
+    setTimeout(() => node.setDirtyCanvas?.(true, true), 100);
+  }
+
+  const refreshNativePreview = () => {
+    if (!node.imgs || node.imgs.length === 0) return false;
+    const hasNative = node.widgets?.some(
+      (w) =>
+        String(w.name || "").includes("canvas-image-preview") ||
+        String(w.name || "") === "images",
+    );
+    node.setDirtyCanvas?.(true, true);
+    return !!hasNative;
+  };
+  if (!refreshNativePreview()) {
+    let tries = 0;
+    const timer = setInterval(() => {
+      tries++;
+      if (refreshNativePreview() || tries >= 20) clearInterval(timer);
+    }, 100);
+  }
+
+  if (payload.width && payload.height) {
+    node.__bbOutSize = [payload.width, payload.height];
+    node.setDirtyCanvas?.(true, true);
+    requestAnimationFrame(() => node.setDirtyCanvas?.(true, true));
+    setTimeout(() => node.setDirtyCanvas?.(true, true), 100);
   }
 
   const snapshotKey2 = "bb_snapshot_" + String(node.id);
@@ -660,6 +664,84 @@ async function handleMaskResult(payload) {
 
   window._bbEditTargetNode = null;
   window._bbEditNodeId = null;
+}
+
+function drawBBOutputSize(ctx, node) {
+  const s = node.__bbOutSize;
+  if (!Array.isArray(s) || s.length !== 2) return;
+  if (!node.imgs || node.imgs.length === 0) return;
+
+  const img = node.imgs[0];
+  const imgW = img.naturalWidth || img.width;
+  const imgH = img.naturalHeight || img.height;
+  if (!imgW || !imgH) return;
+
+  const previewWidget = node.widgets?.find(
+    (w) =>
+      String(w.name || "").includes("canvas-image-preview") ||
+      String(w.name || "") === "images",
+  );
+
+  let haveRect = false;
+  let drawX = 0,
+    drawY = 0,
+    drawW = 0,
+    drawH = 0;
+
+  if (previewWidget) {
+    const wy = previewWidget.last_y || 0;
+    const wh = previewWidget.computeSize
+      ? previewWidget.computeSize(node.size[0])[1]
+      : node.size[1] - wy;
+    if (wh > 0 && wy > 0) {
+      const scale = Math.min(node.size[0] / imgW, wh / imgH);
+      drawW = imgW * scale;
+      drawH = imgH * scale;
+      drawX = (node.size[0] - drawW) / 2;
+      drawY = wy + (wh - drawH) / 2;
+      haveRect = true;
+    }
+  }
+
+  const text = `${s[0]}×${s[1]}`;
+  const padX = 6;
+  const h = 16;
+  ctx.save();
+  ctx.font = "11px monospace";
+  ctx.textBaseline = "middle";
+  const tw = ctx.measureText(text).width + padX * 2;
+
+  let lx, ly;
+  if (haveRect) {
+    lx = drawX + drawW - tw - 4;
+    ly = drawY + drawH - h - 4;
+  } else {
+    lx = node.size[0] - tw - 8;
+    ly = node.size[1] - h - 6;
+  }
+
+  ctx.fillStyle = "#16161a";
+  const r = 3;
+  ctx.beginPath();
+  ctx.moveTo(lx + r, ly);
+  ctx.lineTo(lx + tw - r, ly);
+  ctx.quadraticCurveTo(lx + tw, ly, lx + tw, ly + r);
+  ctx.lineTo(lx + tw, ly + h - r);
+  ctx.quadraticCurveTo(lx + tw, ly + h, lx + tw - r, ly + h);
+  ctx.lineTo(lx + r, ly + h);
+  ctx.quadraticCurveTo(lx, ly + h, lx, ly + h - r);
+  ctx.lineTo(lx, ly + r);
+  ctx.quadraticCurveTo(lx, ly, lx + r, ly);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+  ctx.fillText(text, lx + padX, ly + h / 2);
+  ctx.restore();
 }
 
 window.addEventListener("message", (e) => {
@@ -695,7 +777,6 @@ app.registerExtension({
         });
         return r;
       } catch (e) {
-        console.warn("[BlueBox] getExtraMenuOptions 异常:", e);
         return origGetExtraMenuOptions?.apply(this, arguments);
       }
     };
@@ -709,6 +790,7 @@ app.registerExtension({
         const maskWidget = node.widgets?.find((w) => w.name === "mask_file");
 
         node.__bbSuppressMaskClear = false;
+        node.__bbOutSize = null;
 
         if (imgWidget && maskWidget) {
           const origCallback = imgWidget.callback;
@@ -719,10 +801,35 @@ app.registerExtension({
               }
               const key = "bb_snapshot_" + String(node.id);
               BB_DB.delete(key).catch(() => {});
+              node.__bbOutSize = null;
             }
             return origCallback?.apply(this, [value, ...rest]);
           };
         }
+
+        node.setSize([320, 380]);
+        node.resizable = true;
+
+        chainCallback(node, "onExecuted", function (message) {
+          try {
+            const outSize = message?.out_size?.[0] ?? null;
+            if (outSize) {
+              this.__bbOutSize = outSize;
+              this.setDirtyCanvas?.(true, true);
+              requestAnimationFrame(() => this.setDirtyCanvas?.(true, true));
+              setTimeout(() => this.setDirtyCanvas?.(true, true), 100);
+            }
+          } catch (e) {
+            console.warn("[BlueBox] LoadImage onExecuted 解析失败:", e);
+          }
+        });
+
+        chainCallback(node, "onDrawForeground", function (ctx) {
+          try {
+            drawBBOutputSize(ctx, this);
+          } catch (e) {}
+        });
+
         return r;
       };
     }
@@ -734,22 +841,51 @@ app.registerExtension({
         const node = this;
 
         node.__bbNodeId = String(node.id);
+        node.__bbReferencePending = null;
+        node.__bbSourceHash = null;
 
-        node.addWidget("button", "继续", null, async () => {
-          const nodeId = node.__bbNodeId || String(node.id);
-          try {
-            await fetch("/bluebox/bridge_continue", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ node_id: nodeId }),
-            });
-            console.log("[BlueBox] 已发送继续信号:", nodeId);
-            await triggerRerun();
-          } catch (e) {
-            console.warn("[BlueBox] 继续信号发送失败:", e);
+        const acceptWidget = node.widgets?.find(
+          (w) => w.name === "accept_input",
+        );
+
+        const applyAcceptTitle = () => {
+          const baseTitle = "Bridge (BlueBox)";
+          const suffix = acceptWidget?.value ? "     ||" : "     >>";
+          if (node.title !== baseTitle + suffix) {
+            node.title = baseTitle + suffix;
           }
-        });
+          node.setDirtyCanvas?.(true, true);
+        };
 
+        if (acceptWidget) {
+          const origCallback = acceptWidget.callback;
+          acceptWidget.callback = function (value, ...rest) {
+            applyAcceptTitle();
+            return origCallback?.apply(this, [value, ...rest]);
+          };
+          setTimeout(applyAcceptTitle, 50);
+        }
+
+        return r;
+      };
+
+      const origOnConfigure = nodeType.prototype.onConfigure;
+      nodeType.prototype.onConfigure = function (info) {
+        const r = origOnConfigure?.apply(this, arguments);
+        try {
+          const node = this;
+          const acceptWidget = node.widgets?.find(
+            (w) => w.name === "accept_input",
+          );
+          if (acceptWidget) {
+            const baseTitle = "Bridge (BlueBox)";
+            const suffix = acceptWidget.value ? " ‖" : " →";
+            if (node.title !== baseTitle + suffix) {
+              node.title = baseTitle + suffix;
+            }
+            node.setDirtyCanvas?.(true, true);
+          }
+        } catch (e) {}
         return r;
       };
 
@@ -757,10 +893,6 @@ app.registerExtension({
       nodeType.prototype.onExecuted = function (message) {
         const r = origOnExecuted?.apply(this, arguments);
         try {
-          console.log(
-            "[BlueBox] Bridge onExecuted:",
-            JSON.stringify(message),
-          );
           const imgs = message?.images;
           if (Array.isArray(imgs) && imgs.length > 0) {
             const first = imgs[0];
@@ -770,65 +902,11 @@ app.registerExtension({
                 subfolder: first.subfolder || "",
                 type: first.type || "output",
               };
-              console.log(
-                "[BlueBox] Bridge 缓存当前图元信息:",
-                this.__bbCurrentImageMeta,
-              );
             }
           }
 
-          // 新增：如果本次执行带了 reference，缓存参考图到 IndexedDB
-          if (message?.reference_present?.[0]) {
-            const node = this;
-            const refInput = node.inputs?.find((i) => i.name === "reference");
-            let refUrl = null;
-
-            if (refInput && refInput.link != null) {
-              const graph = app.graph;
-              const link = graph?.links?.[refInput.link];
-              if (link) {
-                const originNode = graph.getNodeById(link.origin_id);
-                if (originNode) {
-                  if (originNode.imgs && originNode.imgs.length > 0) {
-                    refUrl = extractUrlFromImgEntry(originNode.imgs[0]);
-                  }
-                  if (!refUrl && originNode.properties?.imgData?.base64) {
-                    const mime = originNode.properties.imgData.type || "image/webp";
-                    refUrl = `data:${mime};base64,${originNode.properties.imgData.base64}`;
-                  }
-                  if (!refUrl) {
-                    const w = originNode.widgets?.find((x) => x.name === "image");
-                    if (w && typeof w.value === "string" && w.value) {
-                      refUrl =
-                        "/view?filename=" +
-                        encodeURIComponent(w.value) +
-                        "&subfolder=&type=input";
-                    }
-                  }
-                }
-              }
-            }
-
-            if (refUrl) {
-              const key = "bb_reference_" + String(node.id);
-              fetch(refUrl)
-                .then((resp) => resp.blob())
-                .then((blob) => {
-                  const fr = new FileReader();
-                  fr.onload = () => {
-                    BB_DB.put(key, fr.result)
-                      .then(() => {
-                        node.__bbReferenceKey = key;
-                        console.log("[BlueBox] 参考图已缓存:", key);
-                      })
-                      .catch(() => {});
-                  };
-                  fr.readAsDataURL(blob);
-                })
-                .catch((e) => console.warn("[BlueBox] 参考图读取失败:", e));
-            } else {
-              console.log("[BlueBox] reference 已连线但未取到图像");
-            }
+          if (message?.source_hash?.[0]) {
+            this.__bbSourceHash = message.source_hash[0];
           }
         } catch (e) {
           console.warn("[BlueBox] onExecuted 解析失败:", e);
@@ -845,6 +923,7 @@ app.registerExtension({
         if (this.__bbReferenceKey) {
           BB_DB.delete(this.__bbReferenceKey).catch(() => {});
         }
+        this.__bbOutSize = null;
       } catch (e) {}
       return origOnRemoved?.apply(this, arguments);
     };
@@ -923,25 +1002,12 @@ app.registerExtension({
             if (restored !== cur) {
               seedWidget.value = restored;
               node.setDirtyCanvas?.(true, true);
-              console.log(
-                "[BlueBox] 切 fixed 回填:",
-                nodeId,
-                prevMode,
-                "-> fixed, seed",
-                cur,
-                "->",
-                restored,
-              );
-            } else {
-              console.log("[BlueBox] 切 fixed，seed 无需回填:", nodeId, cur);
             }
           }
 
           _lastMode[nodeId] = value;
           return origCallback?.apply(this, [value, ...rest]);
         };
-
-        console.log("[BlueBox] mode widget hooked:", nodeId);
       }
 
       const scanNodes = () => {
@@ -963,8 +1029,6 @@ app.registerExtension({
           return r;
         };
       }
-
-      console.log("[BlueBox] 原生 seed fixed 修正已安装");
     } catch (e) {
       console.warn("[BlueBox] seed fix 安装失败:", e);
     }
